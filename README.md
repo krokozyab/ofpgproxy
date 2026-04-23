@@ -1,6 +1,6 @@
 <div align="center">
   <h1>✨ ofpgproxy</h1>
-  <p><strong>Turn Oracle Fusion Cloud into a blazing-fast PostgreSQL database.</strong></p>
+  <p><strong>Expose Oracle Fusion Cloud as a native PostgreSQL database.</strong></p>
   <p>Connect Metabase, Superset, Grafana, dbt, and DBeaver directly to your Fusion tenant using native PostgreSQL drivers. Zero custom connectors. Just plug in, type <code>SELECT</code>, and watch the data stream.</p>
 
   <br />
