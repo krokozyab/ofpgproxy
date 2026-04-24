@@ -10,9 +10,9 @@
   <br />
   <br />
 
+  <a href="https://github.com/krokozyab/ofpgproxy/releases/latest"><img src="https://img.shields.io/github/v/release/krokozyab/ofpgproxy?style=flat-square&label=download&color=success" alt="Latest release" /></a>
   <img src="https://img.shields.io/badge/PostgreSQL-14%2B-336791?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL Compatible" />
   <img src="https://img.shields.io/badge/Oracle_Fusion-Supported-F80000?style=flat-square&logo=oracle&logoColor=white" alt="Oracle Fusion" />
-  <img src="https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat-square&logo=go&logoColor=white" alt="Built with Go" />
 
   <br />
   <br />
@@ -64,7 +64,9 @@ Because of this deep emulation, it works natively with:
 **Prerequisite:** Deploy the `RP_ARB.xdo` BI Publisher report to your Oracle Fusion tenant. You can download the report catalog from [krokozyab/ofjdbc/otbireport](https://github.com/krokozyab/ofjdbc/tree/master/otbireport).
 
 ```bash
-# 1. Download the binary and metadata catalog
+# 1. Grab the binary + metadata catalog from the latest release:
+#    https://github.com/krokozyab/ofpgproxy/releases/latest
+#    Two .zip files — double-click to extract on macOS Finder or Windows Explorer.
 ./ofpgproxy --version
 
 # 2. Point it at your Oracle Fusion tenant

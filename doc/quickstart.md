@@ -11,11 +11,21 @@ From zero to a working `SELECT` against Fusion in five minutes.
 
 ## 2. Get the artefacts
 
-Drop into an empty working directory:
+Grab them from the [latest GitHub release](https://github.com/krokozyab/ofpgproxy/releases/latest). Two zip files, double-click to extract on macOS Finder or Windows Explorer — no `tar`, no `zstd`.
 
-- `ofpgproxy` — the binary (`chmod +x` on macOS/Linux).
-- `metadata.db` — pre-built Fusion catalog (~30 MB, DuckDB format).
-- Optional: `.env.example` — copy to `.env` and fill in.
+| Download | Contents |
+|---|---|
+| `ofpgproxy_<version>_darwin_arm64.zip` *(macOS)* or `ofpgproxy_<version>_windows_amd64.zip` *(Windows)* | The binary, `.env.example`, `LICENSE`, mini-README |
+| `ofpgproxy-catalog_<version>.zip` | `metadata.db` — pre-built Fusion catalog (~30 000 tables, ~160 MB uncompressed). Same file across platforms. |
+
+Drop both extracted folders into the same working directory; move `metadata.db` next to the binary. On macOS, run `chmod +x ofpgproxy` if Finder dropped the executable bit, and `xattr -d com.apple.quarantine ofpgproxy` to clear the Gatekeeper flag on first run.
+
+Verify the download (optional but recommended) — `SHA256SUMS` is on the same release page:
+
+```
+shasum -a 256 -c SHA256SUMS --ignore-missing      # macOS / Linux
+Get-FileHash *.zip -Algorithm SHA256              # Windows PowerShell
+```
 
 ## 3. Configure
 
