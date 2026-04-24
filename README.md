@@ -98,6 +98,7 @@ psql -h localhost -p 5433 -U anyone -d any \
 | ⚙️ [**Configuration**](doc/configuration.md) | Flags, environment variables, and signals |
 | 🔑 [**Authentication**](doc/auth.md) | SSO, password, and token-file modes |
 | 🤝 [**Connecting clients**](doc/clients.md) | Recipes for psql, DBeaver, DuckDB, `postgres_fdw`, `dblink`, pgx/psycopg/pgJDBC |
+| 🍳 [**Copy-paste recipes**](doc/recipes.md) | Ready-to-run scripts for DuckDB `ATTACH`, PG → proxy via `dblink` and `postgres_fdw`, with JOIN/CTAS examples |
 | 🔀 [**SQL compatibility**](doc/sql-compat.md) | Every PG→Oracle rewrite + known limitations + workarounds |
 | 🗂️ [**Metadata catalog**](doc/metadata.md) | What `metadata.db` contains and how to refresh it |
 | 🚑 [**Troubleshooting**](doc/troubleshooting.md) | Common errors, what they mean, and how to fix them |

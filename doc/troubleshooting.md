@@ -69,9 +69,10 @@ The router couldn't classify the statement. Supported kinds:
 - SELECT against `pg_catalog.*` / `information_schema.*`.
 - Session verbs: `BEGIN`, `COMMIT`, `ROLLBACK`, `SAVEPOINT`, `SET`, `RESET`, `DISCARD`, `SHOW`.
 - Cursor verbs: `DECLARE … CURSOR FOR …`, `FETCH`, `CLOSE`.
+- `COPY (SELECT …) TO STDOUT` — text format only (DuckDB `postgres_scanner` with `pg_use_binary_copy=false`, `psql \copy`, `pg_dump --data-only`).
 - `SELECT 1`, `SELECT '<literal>'` — handshake fast paths.
 
-Everything else (DDL, DML, COPY, LISTEN/NOTIFY, large-object verbs) is rejected. Writes are an intentional `42501 permission_denied` — BI Publisher is read-only; if you need write-back, target a downstream database.
+Everything else (DDL, DML, binary `COPY`, `LISTEN`/`NOTIFY`, large-object verbs) is rejected. Writes are an intentional `42501 permission_denied` — BI Publisher is read-only; if you need write-back, target a downstream database.
 
 If you think a query *should* be classifiable (new PG idiom, new BI-tool probe), capture the SQL from `--log-queries` output and file it — translator passes are cheap to add.
 
@@ -108,7 +109,13 @@ You're on an old proxy build. Current builds support cursor protocol natively (s
 
 ### DuckDB: `Failed to prepare COPY "COPY (...) TO STDOUT (FORMAT \"binary\")"`
 
-DuckDB's `postgres_scanner` uses PG's binary `COPY` protocol, which the proxy doesn't implement (out of scope). Use the [CSV pipeline or `dblink`](clients.md#duckdb) instead.
+DuckDB's `postgres_scanner` defaults to binary `COPY`, which the proxy doesn't implement yet. Current DuckDB builds silently ignore `SET pg_use_binary_copy = false` — use the text-protocol switch instead, before the first query:
+
+```sql
+SET pg_use_text_protocol = true;
+```
+
+That makes `postgres_scanner` issue regular `SELECT` queries (which the proxy fully supports) instead of `COPY`. If you can't flip it (older DuckDB, third-party tool wrapping `postgres_scanner`), fall back to the [CSV pipeline or `dblink`](clients.md#duckdb).
 
 ### `Connection refused` from inside a Docker container
 

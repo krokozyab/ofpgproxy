@@ -41,9 +41,40 @@ Same as DBeaver — PostgreSQL driver, `preferQueryMode=simple`. The IDE's `appl
 
 ## DuckDB
 
-DuckDB's `postgres_scanner` extension relies on `COPY … TO STDOUT (FORMAT binary)` internally, which the proxy doesn't implement. Two paths work cleanly:
+DuckDB's `postgres_scanner` connects natively via `ATTACH` — one required setting steers it to the regular query protocol (binary `COPY` is still on the roadmap):
 
-### CSV pipeline (recommended)
+```sql
+INSTALL postgres;
+LOAD postgres;
+
+-- IMPORTANT: the proxy does not implement binary COPY yet; tell
+-- postgres_scanner to use the regular query protocol instead.
+SET pg_use_text_protocol = true;
+
+ATTACH 'host=127.0.0.1 port=5433 user=anyone password=anyone dbname=any sslmode=disable'
+  AS fusion (TYPE POSTGRES, READ_ONLY);
+
+SELECT * FROM fusion.public.gl_periods LIMIT 10;
+
+-- Cache into a local DuckDB table for fast iterative analysis.
+CREATE TABLE gl_periods_2024 AS
+  SELECT period_name, period_year, start_date, end_date
+  FROM fusion.public.gl_periods
+  WHERE period_year = 2024;
+
+-- JOIN Fusion with a local table right in DuckDB.
+SELECT p.period_name, p.period_year
+FROM fusion.public.gl_periods p
+JOIN my_local_filter f ON p.period_year = f.yr;
+```
+
+Joins against local DuckDB tables, materialized views, and Parquet files work the same way — DuckDB's planner pushes predicates down into ofpgproxy, which translates them to Oracle via BI Publisher.
+
+> **Note on `pg_use_binary_copy`.** Current DuckDB builds of `postgres_scanner` ignore `SET pg_use_binary_copy = false` and keep requesting binary `COPY`; the proxy rejects that with a clear error. `pg_use_text_protocol = true` is the working switch.
+
+### Fallback: CSV pipe
+
+If the text-protocol path isn't available (very old DuckDB or a wrapper that bypasses `postgres_scanner`), the proxy is still a plain PG endpoint, so `psql --csv | duckdb -c "read_csv('/dev/stdin')"` works:
 
 ```bash
 psql -h 127.0.0.1 -p 5433 -U anyone -d any --csv \
