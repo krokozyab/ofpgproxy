@@ -5,7 +5,7 @@
 
   <br />
   
-  <img src="assets/hero.png" alt="ofpgproxy Architecture" width="800" />
+  <img src="assets/fpg.png" alt="ofpgproxy Architecture" width="800" />
 
   <br />
   <br />
