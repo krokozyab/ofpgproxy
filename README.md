@@ -13,6 +13,7 @@
   <a href="https://github.com/krokozyab/ofpgproxy/releases/latest"><img src="https://img.shields.io/badge/download-latest-success?style=flat-square&logo=github" alt="Latest release" /></a>
   <img src="https://img.shields.io/badge/PostgreSQL-14%2B-336791?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL Compatible" />
   <img src="https://img.shields.io/badge/Oracle_Fusion-Supported-F80000?style=flat-square&logo=oracle&logoColor=white" alt="Oracle Fusion" />
+  [![GitHub Downloads](https://img.shields.io/github/downloads/krokozyab/ofpgproxy/total?style=for-the-badge&logo=github)](https://github.com/krokozyab/ofpgproxy/releases)
 
   <br />
   <br />
