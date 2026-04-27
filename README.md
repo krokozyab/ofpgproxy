@@ -10,7 +10,7 @@
   <br />
   <br />
 
-  <a href="https://github.com/krokozyab/ofpgproxy/releases/latest"><img src="https://img.shields.io/github/v/release/krokozyab/ofpgproxy?style=flat-square&label=download&color=success" alt="Latest release" /></a>
+  <a href="https://github.com/krokozyab/ofpgproxy/releases/latest"><img src="https://img.shields.io/badge/download-latest-success?style=flat-square&logo=github" alt="Latest release" /></a>
   <img src="https://img.shields.io/badge/PostgreSQL-14%2B-336791?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL Compatible" />
   <img src="https://img.shields.io/badge/Oracle_Fusion-Supported-F80000?style=flat-square&logo=oracle&logoColor=white" alt="Oracle Fusion" />
 
@@ -91,6 +91,7 @@ psql -h localhost -p 5433 -U anyone -d any \
 * 🪄 **PostgreSQL → Oracle SQL Auto-Translation.** `TRUE/FALSE`, `ILIKE`, regex `~`, `date_trunc`, `EXCEPT`, `WITH RECURSIVE`, and more are translated automatically on the fly. [See the full matrix](doc/sql-compat.md).
 * 🛡️ **Real PostgreSQL Errors.** `ORA-00942` seamlessly becomes SQLSTATE `42P01 undefined_table`. Your tools react exactly as they should.
 * 🔒 **Read-Only by Design.** BI Publisher can't write, and neither will the proxy. No accidental DML. Sleep soundly.
+* 🧪 **Built-in Translator Playground.** Launch with `--translate-http 127.0.0.1:8080` to get an offline web UI (and JSON endpoint) that shows, for any SQL you paste, which router branch it hits and the rewritten Oracle / DuckDB statement — no Fusion connection needed. [Details](doc/configuration.md#sql-translator-playground).
 
 ## 📖 Documentation
 

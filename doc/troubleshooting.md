@@ -76,6 +76,8 @@ Everything else (DDL, DML, binary `COPY`, `LISTEN`/`NOTIFY`, large-object verbs)
 
 If you think a query *should* be classifiable (new PG idiom, new BI-tool probe), capture the SQL from `--log-queries` output and file it — translator passes are cheap to add.
 
+> **Tip:** start the proxy with `--translate-http 127.0.0.1:8080` and paste the offending SQL into the playground at <http://127.0.0.1:8080>. It shows the router decision and the exact rewrite without touching Fusion — useful for narrowing down whether the issue is in routing, translation, or BIP itself. See [Configuration → SQL Translator playground](configuration.md#sql-translator-playground).
+
 ### `DISTINCT ON form not supported`
 
 The `DISTINCT ON` rewrite handles simple top-level SELECTs. More exotic forms (inside UNIONs, with CTEs, with `*` target) are rejected. Rewrite manually with `ROW_NUMBER() OVER (PARTITION BY … ORDER BY …)` and filter on the partition rank. [Full note](sql-compat.md#distinct-on-form-not-supported).
