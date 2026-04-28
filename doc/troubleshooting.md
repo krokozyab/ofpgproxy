@@ -89,6 +89,18 @@ The `DISTINCT ON` rewrite handles simple top-level SELECTs. More exotic forms (i
 - **Row limit in DBeaver** (the UI `1000` field at the bottom of the result grid) is a **display cap**, not a SQL limit. DBeaver still asks for *everything* and throws most away. The proxy auto-batches via OFFSET/FETCH for DBeaver, so the first 200 rows appear quickly anyway — but a `SELECT COUNT(*)` on a million-row table still hits BIP hard.
 - Write `LIMIT 1000` in the SQL if you want to bound BIP-side work.
 
+### A long query blocks every other tab / connection
+
+The proxy serialises foreign `SELECT`s through a single SOAP slot by default (`--soap-concurrency=1`) — one call in flight at a time. While a heavy `SELECT` is running on tab A, every new query on tab B waits. `pg_catalog` / `information_schema` queries (IDE introspection) bypass this and stay responsive — only Fusion-table queries queue up.
+
+Raise the cap for interactive use:
+
+```bash
+./ofpgproxy … --soap-concurrency 4
+```
+
+Sizing notes are in [Configuration → SOAP concurrency](configuration.md#soap-concurrency). The default stays low because BI Publisher accumulates server-side sessions; pushing it too high makes the tenant start refusing logins.
+
 ### Empty `\d <table>` or empty Metabase schema sync
 
 Catalog isn't mounted. Check the startup log for `pg_catalog emulation enabled, reading …` — if missing, relaunch with `--metadata-path`.
