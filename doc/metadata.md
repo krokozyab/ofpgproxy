@@ -19,7 +19,7 @@ The proxy opens this file **read-only**. Multiple proxy instances on the same ma
 
 ## Oracle type codes inside `cached_columns.column_type`
 
-The dumper uses a compact form for the common cases:
+The shipped catalog uses a compact form for the common cases:
 
 | Code | Oracle type |
 |---|---|
@@ -33,23 +33,11 @@ The proxy maps these to PG OIDs on the fly for `pg_attribute` results, and uses 
 
 ## Refreshing
 
-When Fusion adds tables (module install, patch rollout, custom-DFF deployment) the shipped catalog gets out of date. Options:
+The shipped `metadata.db` reflects a stock Fusion catalog at release time. When your tenant changes (module install, patch rollout, custom-DFF deployment) the file gets out of date and newly-added tables won't appear in DBeaver's tree, `\d`, or any catalog-driven tool.
 
-### Atomic reload (preferred)
+The shipped releases include a refreshed catalog every few weeks. If you need a tenant-specific snapshot sooner — open a GitHub issue.
 
-1. Regenerate the file with the accompanying catalog dumper tool against your tenant.
-2. Overwrite `metadata.db` in place.
-3. `kill -HUP $(pgrep ofpgproxy)`
-
-The proxy swaps the new file in atomically. Connected clients see the new schema on their next query — no reconnect. The previous catalog is held briefly so in-flight queries finish cleanly.
-
-### Restart
-
-If you prefer a full restart, simply replace the file and bounce the proxy. Clients re-authenticate (SSO) on the new process.
-
-## Selecting by module
-
-The tenant catalog ships with every reachable table by default; large deployments may prefer to filter to a subset of Fusion modules (GL, AP, AR only, say). The dumper accepts module filters — consult its documentation.
+To use a new file: replace `metadata.db` and bounce the proxy.
 
 ## What happens without a catalog
 

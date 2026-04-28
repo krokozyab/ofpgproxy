@@ -10,7 +10,7 @@ Every `ORA-…` is forwarded from Fusion with a matching PostgreSQL SQLSTATE. Th
 
 Fusion can't find the table. Two possibilities:
 
-- **The table isn't in your catalog.** DBeaver's tree might list it (some probes go to Fusion directly), but `metadata.db` doesn't have it, so the proxy rejects the query up front. Re-run the catalog dumper and `SIGHUP`.
+- **The table isn't in your catalog.** DBeaver's tree might list it (some probes go to Fusion directly), but `metadata.db` doesn't have it, so the proxy rejects the query up front. Use a refreshed `metadata.db` from the latest release.
 - **The table genuinely doesn't exist in the tenant** — typo, or a module that isn't installed. Check with a Fusion admin.
 
 ### `ORA-00904: "COL_NAME": invalid identifier`
@@ -105,7 +105,7 @@ Sizing notes are in [Configuration → SOAP concurrency](configuration.md#soap-c
 
 Catalog isn't mounted. Check the startup log for `pg_catalog emulation enabled, reading …` — if missing, relaunch with `--metadata-path`.
 
-If the line is there but a specific table has zero columns (`\d gl_je_categories` empty), that particular table is missing from `cached_columns` in your catalog. Re-dump with the catalog tool; some custom DFF tables aren't in the dumper's default filter.
+If the line is there but a specific table has zero columns (`\d gl_je_categories` empty), that particular table is missing from `cached_columns` in your shipped catalog. Pick up a refreshed `metadata.db` from the next release; if you need it sooner, open a GitHub issue.
 
 ### SSO keeps reopening Chrome
 
