@@ -116,8 +116,3 @@ Everything that speaks PG just connects: `psql`, DBeaver, Metabase, Grafana, dbt
 **Your tools never find out it isn't a real PostgreSQL database.**
 
 *Actively developed. Expect rough edges on exotic SQL shapes — see [SQL compatibility](doc/sql-compat.md) for the current matrix, and open an issue when you hit one.*
-
-## 📜 License
-
-This project is licensed under the [Apache License, Version 2.0](LICENSE).
-s.
