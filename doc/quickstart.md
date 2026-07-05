@@ -15,7 +15,7 @@ Grab them from the [latest GitHub release](https://github.com/krokozyab/ofpgprox
 
 | Download | Contents |
 |---|---|
-| `ofpgproxy_<version>_darwin_arm64.zip` *(macOS)* or `ofpgproxy_<version>_windows_amd64.zip` *(Windows)* | The binary, `.env.example`, `LICENSE`, mini-README |
+| `ofpgproxy_<version>_darwin_arm64.zip` *(macOS)*, `ofpgproxy_<version>_windows_amd64.zip` *(Windows)*, or `ofpgproxy_<version>_linux_amd64.zip` *(Linux, incl. WSL)* | The binary, `.env.example`, `LICENSE`, mini-README |
 | `ofpgproxy-catalog_<version>.zip` | `metadata.db` — pre-built Fusion catalog (~30 000 tables, ~160 MB uncompressed). Same file across platforms. |
 
 Drop both extracted folders into the same working directory; move `metadata.db` next to the binary. On macOS, run `chmod +x ofpgproxy` if Finder dropped the executable bit, and `xattr -d com.apple.quarantine ofpgproxy` to clear the Gatekeeper flag on first run.
@@ -48,9 +48,22 @@ Full reference: [Configuration](configuration.md) · [Authentication](auth.md)
 
 ## 4. Launch
 
+### macOS / Linux (incl. WSL)
+
 ```bash
 set -a; source .env; set +a
 ./ofpgproxy --metadata-path ./metadata.db
+```
+
+### Windows (PowerShell)
+
+PowerShell doesn't source `.env` files natively — load the variables first, then launch:
+
+```powershell
+Get-Content .env | ForEach-Object {
+  if ($_ -match '^\s*([^#=]+)=(.*)$') { Set-Item "Env:$($Matches[1].Trim())" $Matches[2].Trim() }
+}
+.\ofpgproxy.exe --metadata-path .\metadata.db
 ```
 
 Expected output:
