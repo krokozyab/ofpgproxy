@@ -56,6 +56,7 @@ These are **not** for production.
 | Variable | Effect |
 |---|---|
 | `OFPG_SOAP_DUMP=/path/to/file.xml` | Write every raw SOAP envelope to disk before parsing. Buffers the full response — do not leave enabled on large tables. Used when diagnosing a SOAP-shape mismatch. |
+| `OFPG_LOG_FULL_SQL=1` | Disable the ~2000-char truncation on SQL logged in `msg=parse` and `msg="foreign exec failed"` lines. BI-tool-generated queries (Power BI custom SQL, wide `SELECT *` imports) routinely blow past the default cap, hiding the part that actually errors. Leave off otherwise — full statements can be very large. |
 
 ## SOAP concurrency
 

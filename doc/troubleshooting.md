@@ -148,13 +148,15 @@ time=... level=INFO msg=parse kind=foreign_select parse_took=237ms sql="SELECT .
 - `table` — inferred target table (empty for catalog / session / cursor-all).
 - `sql` — statement text, truncated at ~2000 chars.
 
-Streaming SELECT completions log a follow-up `msg=exec done` with `rows` and `took` for the full round trip.
+Streaming SELECT completions log a follow-up `msg="exec done"` with `rows` and `took` for the full round trip.
+
+If a foreign SELECT fails once translated SQL reaches Fusion, the proxy logs a `msg="foreign exec failed"` WARN line alongside the `ORA-…` the client sees, with the *exact* Oracle SQL that was sent (`oracle_sql`) — not the original PG-flavoured query from `msg=parse`. This is the line to grab when a query works in `psql` but fails from a BI tool: the client-generated SQL (Power BI, Tableau, DBeaver's introspection) is often not what you'd expect from reading the tool's UI. Both `sql` fields truncate at ~2000 chars by default; set `OFPG_LOG_FULL_SQL=1` (see [Configuration → Debug / development](configuration.md#debug--development)) to capture them whole when a wide `SELECT *` or a 100+-column BI import is the suspect.
 
 ## Still stuck?
 
 Capture:
 
-1. The exact SQL (copy from the `--log-queries` line).
+1. The exact SQL — the `oracle_sql` field from a `msg="foreign exec failed"` line if the query reached Fusion and errored there; otherwise the `sql` field from the `msg=parse` line. Set `OFPG_LOG_FULL_SQL=1` first if the query is long (BI-tool imports routinely are) — the default ~2000-char truncation cuts off exactly the part you need for wide `SELECT *` queries.
 2. The error message (with `SQLSTATE` if your client shows it).
 3. A single-row sample of the offending table (`SELECT * FROM …_ LIMIT 1`) — types + values often pinpoint the issue.
 
