@@ -15,13 +15,16 @@ Start the proxy with `--oracle-listen` (and `--oracle-password`) — see
 and Oracle tooling connects on that port (default `1521`), no Postgres client
 needed. Read-only: the proxy rejects any write.
 
-**Credentials — what to enter.** The proxy accepts **any username** and the one
-shared password you set with `--oracle-password` / `ORACLE_WIRE_PASSWORD`:
+**Credentials — what to enter.** Unlike the PG-wire side (which accepts *any*
+password), the Oracle side has one shared password **you choose** and set with
+`--oracle-password` / `ORACLE_WIRE_PASSWORD`. The client must send that exact
+value:
 
-- **Username** — anything (e.g. `fusion`). It is *not* validated; real access
-  control is the Fusion session the proxy holds underneath.
-- **Password** — **must** equal your `--oracle-password` value. The O5LOGON
-  handshake is mutual, so a wrong password fails the login.
+- **Username** — anything (e.g. `fusion`). *Not* validated; real access control
+  is the Fusion session the proxy holds underneath.
+- **Password** — **the value you set** in `--oracle-password` /
+  `ORACLE_WIRE_PASSWORD` (there's no default — the proxy won't start the Oracle
+  listener without one). A wrong password fails the O5LOGON mutual handshake.
 - **Service name / SID** — anything (e.g. `fusion`). It is ignored.
 
 ### SQL Developer
