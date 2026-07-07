@@ -1,12 +1,17 @@
 # Authentication
 
-`ofpgproxy` supports three auth modes, selected via `--auth` / `FUSION_AUTH_TYPE`:
+`ofpgproxy` supports six auth modes for the **Fusion backend**, selected via `--auth` / `FUSION_AUTH_TYPE`:
 
 - `sso` — browser-based federated login (most common on real tenants)
 - `password` — basic auth
-- `token-file` — pre-issued bearer token
+- `token-file` — pre-issued bearer token, re-read each call
+- `token-refresh` — long-lived OAuth refresh token, access token auto-refreshed
+- `client-credentials` — headless app-only OAuth grant
+- `jwt-assertion` — headless service account impersonating a user (the BIP-compatible cloud grant)
 
-Clients connecting to the proxy itself **do not** need credentials: the proxy accepts any `user` / `password` in the PG wire startup message. All actual authentication happens on the Fusion side using whichever mode you configured.
+The last three are OAuth grants for **headless cloud deployments** — no browser. For running reports (which BI Publisher does *as a user*), `jwt-assertion` is the one to reach for; see [Headless cloud](#headless-cloud-oauth) below.
+
+Clients connecting to the proxy itself **do not** need credentials: the proxy accepts any `user` / `password` in the PG-wire startup message (and any username with the shared `--oracle-password` on the Oracle-wire side). All actual authentication happens on the Fusion side using whichever mode you configured.
 
 ---
 
@@ -74,7 +79,81 @@ For out-of-band-authenticated setups:
 - File format: the bearer token as plain text, with or without a trailing newline.
 - Permissions: restrict to the proxy user — the token grants API access to your tenant.
 
-Useful behind an ESS-managed token vault, in CI pipelines that already have a Fusion token in a secret store, or for headless environments where no browser is available.
+Useful behind an ESS-managed token vault, in CI pipelines that already have a Fusion token in a secret store, or for headless environments where no browser is available. `token-file` is static — nothing auto-refreshes it; rotate the file out of band.
+
+---
+
+## Headless cloud (OAuth)
+
+For unattended cloud deployments the proxy speaks OAuth directly, reusing an
+expiry-aware token cache. All three read secrets from flags **or** env — prefer
+env so they stay out of `ps`.
+
+### token-refresh
+
+A long-lived OAuth refresh token; the proxy exchanges it for short access
+tokens against Fusion's token-relay endpoint and refreshes automatically
+(proactively before expiry, and again if it lapses while idle).
+
+```bash
+FUSION_AUTH_TYPE=token-refresh \
+FUSION_REFRESH_TOKEN=... \
+./ofpgproxy --fusion-host fa-xxxx.oraclecloud.com --metadata-path ./metadata.db
+```
+
+The refresh token is the credential you supply; the initial access token is
+fetched at startup if not given (`FUSION_ACCESS_TOKEN`). You still need to
+obtain the refresh token once (today that means the browser SSO flow).
+
+### client-credentials
+
+The classic service-account grant: `client_id` + `client_secret` → token from
+the IdP, cached to expiry and re-fetched — no user, no browser, no refresh
+token. Config is validated by an eager fetch at startup.
+
+```bash
+FUSION_AUTH_TYPE=client-credentials \
+FUSION_OAUTH_TOKEN_URL=https://<idcs-host>/oauth2/v1/token \
+FUSION_OAUTH_CLIENT_ID=... FUSION_OAUTH_CLIENT_SECRET=... \
+FUSION_OAUTH_SCOPE=... \
+./ofpgproxy --fusion-host fa-xxxx.oraclecloud.com --metadata-path ./metadata.db
+```
+
+> ⚠️ A client-credentials token is **app-only** — it carries no user identity.
+> BI Publisher runs reports *as a user*, so this grant may be rejected by BIP
+> or run with no user context. For BIP, use **`jwt-assertion`** instead.
+
+### jwt-assertion
+
+The OAuth 2.0 JWT bearer grant (RFC 7523) — a service account **impersonating a
+user**. The proxy mints a short JWT whose `sub` is the service-account user,
+signs it with the app's registered RSA key, and exchanges it for a *user-scoped*
+access token that BI Publisher accepts.
+
+```bash
+FUSION_AUTH_TYPE=jwt-assertion \
+FUSION_OAUTH_TOKEN_URL=https://<idp-host>/oauth2/v1/token \
+FUSION_OAUTH_CLIENT_ID=<app-client-id> \
+FUSION_JWT_SUBJECT=svc.reporting@corp \
+FUSION_JWT_KEY_FILE=/run/secrets/assertion-key.pem \
+FUSION_JWT_KEY_ID=<kid> \
+FUSION_JWT_AUDIENCE=https://<idp-host>/ \
+./ofpgproxy --fusion-host fa-xxxx.oraclecloud.com --metadata-path ./metadata.db
+```
+
+Setup (a **tenant-admin** task):
+
+1. Register a confidential OAuth client in IDCS / OCI IAM (or OAM) with the JWT
+   user-assertion grant enabled.
+2. Upload the **public** cert of an RSA keypair to the app; note its `kid`.
+3. Grant the client the right to impersonate the service-account user and to
+   access the Fusion/BIP resource (scope).
+4. Give the proxy the **private** key (PEM, PKCS#1 or #8), `client_id`, `kid`,
+   token URL, audience, and the service-account username (`sub`).
+
+The proxy signs the assertion in-process (RS256); the private key never leaves
+the host and is never sent over the wire — only the signed, short-lived
+assertion is.
 
 ---
 

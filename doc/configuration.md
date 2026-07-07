@@ -9,34 +9,79 @@ Flags always win over environment variables. A few parameters are available only
 
 ## Command-line flags
 
-| Flag | Default | Description |
-|---|---|---|
-| `--listen` | `127.0.0.1:5433` | `host:port` the PG-wire listener binds to. |
-| `--fusion-host` | — | Fusion tenant hostname. **No protocol, no path.** Example: `fa-xxxx.oraclecloud.com`. |
-| `--report-path` | `/Custom/Financials/RP_ARB.xdo` | BI Publisher report absolute path. Most tenants use `/Custom/sql/RP_ARB.xdo`. |
-| `--auth` | — | Authentication mode: `password`, `token-file`, `sso`. Required when `--fusion-host` is set. See [Authentication](auth.md). |
-| `--auth-user` | — | Fusion username, only for `--auth=password`. |
-| `--auth-password` | — | Fusion password, only for `--auth=password`. Consider using env var instead. |
-| `--auth-token-file` | — | Path to bearer-token file, only for `--auth=token-file`. |
-| `--sso-timeout` | `300` | SSO browser-login timeout in seconds. |
-| `--metadata-path` | — | Path to `metadata.db`. Without it `pg_catalog` queries return empty — DBeaver trees look empty, `\d` returns nothing, but foreign SELECTs still work. |
-| `--foreign-batch-size` | `200` | Rows per SOAP call when an **IDE client** runs a foreign SELECT without `LIMIT`. `0` disables auto-pagination entirely (code clients always get a single shot). See [Clients — pagination](clients.md#pagination). |
-| `--soap-concurrency` | `1` | Max concurrent SOAP calls to BI Publisher. Default `1` serialises all foreign SELECTs (one in-flight at a time). Raise to `2`–`4` for IDE-heavy use; see [SOAP concurrency](#soap-concurrency). |
-| `--log-queries` | `true` | Emit one structured log entry per incoming query (kind, table, duration). Set `--log-queries=false` in production after tuning. |
-| `--translate-http` | — *(off)* | `host:port` for the built-in SQL Translator playground. Off by default; suggested value `127.0.0.1:8080`. Loopback only — see [SQL Translator playground](#sql-translator-playground). |
+### Listeners
+
+| Flag | Env | Default | Description |
+|---|---|---|---|
+| `--listen` | `OFPG_LISTEN` | `127.0.0.1:5433` | `host:port` the PG-wire (Postgres) listener binds to. |
+| `--oracle-listen` | `OFPG_ORACLE_LISTEN` | off | `host:port` for a second, read-only **Oracle-wire (TNS/TTC)** listener so Oracle clients (SQLcl, python-oracledb, ojdbc) connect too. Shares the SOAP backend + metadata catalog. See [Oracle-wire frontend](#oracle-wire-frontend). |
+| `--oracle-password` | `ORACLE_WIRE_PASSWORD` | — | Shared password the Oracle-wire O5LOGON handshake accepts (any username). **Required** with `--oracle-listen`. |
+| `--metrics-listen` | `OFPG_METRICS_LISTEN` | off | `host:port` for the ops HTTP server: Prometheus `/metrics` + `/healthz` + `/readyz`. Requires `--oracle-listen`. No auth — bind to loopback. See [Observability](observability.md). |
+
+### Backend
+
+| Flag | Env | Default | Description |
+|---|---|---|---|
+| `--fusion-host` | `FUSION_HOST` | — | Fusion tenant hostname. **No protocol, no path.** Example: `fa-xxxx.oraclecloud.com`. |
+| `--report-path` | `FUSION_SQL_REPORT_PATH` | `/Custom/Financials/RP_ARB.xdo` | BI Publisher report absolute path. Most tenants use `/Custom/sql/RP_ARB.xdo`. |
+| `--metadata-path` | — | — | Path to `metadata.db`. Without it `pg_catalog` queries return empty — DBeaver trees look empty, `\d` returns nothing, but foreign SELECTs still work. Enables metadata-driven column typing on the Oracle-wire side. |
+| `--foreign-batch-size` | — | `200` | Rows per SOAP call when an **IDE client** runs a foreign SELECT without `LIMIT`. `0` disables auto-pagination (code clients always get a single shot). See [Clients — pagination](clients.md#pagination). |
+| `--soap-concurrency` | `FUSION_SOAP_CONCURRENCY` | `1` | Max concurrent SOAP calls to BI Publisher. Default `1` serialises all foreign SELECTs. Raise to `2`–`4` for IDE-heavy use; too high and the tenant refuses logins. See [SOAP concurrency](#soap-concurrency). |
+| `--log-queries` | — | `true` | One structured log entry per incoming query (kind, table, duration). Set `false` in production after tuning. |
+| `--translate-http` | — | off | `host:port` for the built-in offline SQL Translator playground (dev tool). Loopback only. See [SQL Translator playground](#sql-translator-playground). |
+
+### Authentication
+
+`--auth` selects the mode; the rest are mode-specific. Full details in [Authentication](auth.md).
+
+| Flag | Env | For mode | Description |
+|---|---|---|---|
+| `--auth` | `FUSION_AUTH_TYPE` | all | `password` \| `token-file` \| `token-refresh` \| `client-credentials` \| `jwt-assertion` \| `sso`. Required when `--fusion-host` is set. |
+| `--auth-user` | `FUSION_USER` | password | Fusion username. |
+| `--auth-password` | `FUSION_PASSWORD` | password | Fusion password (prefer env). |
+| `--auth-token-file` | — | token-file | Path to a bearer-token file (re-read each call, so rotate externally). |
+| `--auth-refresh-token` | `FUSION_REFRESH_TOKEN` | token-refresh | Long-lived OAuth refresh token; the proxy auto-refreshes the access token. |
+| `--auth-access-token` | `FUSION_ACCESS_TOKEN` | token-refresh | Optional seed access token (saves one startup refresh). |
+| `--oauth-token-url` | `FUSION_OAUTH_TOKEN_URL` | client-credentials, jwt-assertion | IdP token endpoint, e.g. `https://<idcs>/oauth2/v1/token`. |
+| `--oauth-client-id` | `FUSION_OAUTH_CLIENT_ID` | client-credentials, jwt-assertion | OAuth client id. |
+| `--oauth-client-secret` | `FUSION_OAUTH_CLIENT_SECRET` | client-credentials, jwt-assertion | OAuth client secret (prefer env). |
+| `--oauth-scope` | `FUSION_OAUTH_SCOPE` | client-credentials, jwt-assertion | Scope, if the IdP requires one. |
+| `--jwt-subject` | `FUSION_JWT_SUBJECT` | jwt-assertion | Service-account username to run reports as (JWT `sub`). |
+| `--jwt-audience` | `FUSION_JWT_AUDIENCE` | jwt-assertion | Assertion audience (defaults to the token URL). |
+| `--jwt-key-file` | `FUSION_JWT_KEY_FILE` | jwt-assertion | RSA private key (PEM, PKCS#1 or #8) signing the assertion. |
+| `--jwt-key-id` | `FUSION_JWT_KEY_ID` | jwt-assertion | `kid` matching the cert registered with the OAuth app. |
+| `--sso-timeout` | — | sso | Browser-login timeout in seconds (default `300`). |
 
 ## Environment variables
 
-Recognised on every launch; overridden by flags of the same purpose.
+Every setting with an `Env` column above can be supplied via environment
+variable (or `.env`). Flags win over env; env wins over the built-in default.
+Prefer env for secrets so they don't appear in the process table (`ps`). A
+copy-paste starting point lives in `.env.example`.
 
-| Variable | Equivalent flag | Notes |
-|---|---|---|
-| `FUSION_HOST` | `--fusion-host` | |
-| `FUSION_SQL_REPORT_PATH` | `--report-path` | |
-| `FUSION_AUTH_TYPE` | `--auth` | Values match the flag. |
-| `FUSION_USER` | `--auth-user` | |
-| `FUSION_PASSWORD` | `--auth-password` | Preferred over the flag — keeps password out of the process table. |
-| `FUSION_SOAP_CONCURRENCY` | `--soap-concurrency` | Integer, `>= 1`. |
+## Oracle-wire frontend
+
+Set `--oracle-listen`/`OFPG_ORACLE_LISTEN` (plus `--oracle-password`) to expose
+a second, **read-only** listener speaking the Oracle TNS/TTC protocol, so
+Oracle clients — SQLcl, python-oracledb, ojdbc/JDBC — connect alongside the
+PG-wire port. It shares the same SOAP backend, auth and metadata catalog. With
+`--metadata-path` set, columns describe with their real Oracle types
+(NUMBER/DATE/TIMESTAMP/RAW/CLOB/BLOB/…) resolved from the catalog. Both
+frontends run in one process and drain together on shutdown.
+
+```bash
+./ofpgproxy \
+  --listen 127.0.0.1:5433 \
+  --oracle-listen 127.0.0.1:1521 --oracle-password secret \
+  --metadata-path ./metadata.db
+# psql on :5433, sqlplus/sqlcl/python-oracledb on :1521
+```
+
+## Observability
+
+`--metrics-listen`/`OFPG_METRICS_LISTEN` (requires `--oracle-listen`) starts a
+small HTTP server exposing Prometheus `/metrics`, plus `/healthz` (liveness)
+and `/readyz` (readiness). See [Observability](observability.md).
 
 ### `.env` file
 

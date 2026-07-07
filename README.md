@@ -99,8 +99,9 @@ psql -h localhost -p 5433 -U anyone -d any \
 | Guide | Description |
 |---|---|
 | 🏎️ [**Quick Start**](doc/quickstart.md) | Zero to your first `SELECT` in 5 minutes |
-| ⚙️ [**Configuration**](doc/configuration.md) | Flags, environment variables, and signals |
-| 🔑 [**Authentication**](doc/auth.md) | SSO, password, and token-file modes |
+| ⚙️ [**Configuration**](doc/configuration.md) | Flags, env vars, ports, the Oracle-wire frontend, and signals |
+| 🔑 [**Authentication**](doc/auth.md) | SSO, password, token-file, and OAuth (refresh / client-credentials / JWT-assertion) modes |
+| 📈 [**Observability**](doc/observability.md) | Prometheus `/metrics`, `/healthz`, `/readyz` |
 | 🤝 [**Connecting clients**](doc/clients.md) | Recipes for psql, DBeaver, DuckDB, `postgres_fdw`, `dblink`, pgx/psycopg/pgJDBC |
 | 🍳 [**Copy-paste recipes**](doc/recipes.md) | Ready-to-run scripts for DuckDB `ATTACH`, PG → proxy via `dblink` and `postgres_fdw`, with JOIN/CTAS examples |
 | 🔀 [**SQL compatibility**](doc/sql-compat.md) | Every PG→Oracle rewrite + known limitations + workarounds |
