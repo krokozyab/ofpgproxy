@@ -1,8 +1,61 @@
 # Connecting clients
 
-Any tool that speaks the PostgreSQL wire protocol will connect. Use `user=anyone password=anything database=any` by default — the proxy doesn't authenticate PG clients.
+Any tool that speaks the **PostgreSQL** wire protocol connects on `--listen`
+(default `127.0.0.1:5433`) — use `user=anyone password=anything database=any`,
+the proxy doesn't authenticate PG clients. If you also start the optional
+**Oracle-wire** frontend (`--oracle-listen`), Oracle's own tools connect over
+TNS/TTC on that port — see [Oracle clients](#oracle-clients-sql-developer-sqlcl-sqlplus) just below.
 
-Assumes the proxy is running on `127.0.0.1:5433` (the default `--listen`).
+Examples below assume the proxy on `127.0.0.1:5433`.
+
+## Oracle clients (SQL Developer, SQLcl, sqlplus)
+
+Start the proxy with `--oracle-listen` (and `--oracle-password`) — see
+[Configuration → Oracle-wire frontend](configuration.md#oracle-wire-frontend) —
+and Oracle tooling connects on that port (default `1521`), no Postgres client
+needed. Read-only: the proxy rejects any write.
+
+**Credentials — what to enter.** The proxy accepts **any username** and the one
+shared password you set with `--oracle-password` / `ORACLE_WIRE_PASSWORD`:
+
+- **Username** — anything (e.g. `fusion`). It is *not* validated; real access
+  control is the Fusion session the proxy holds underneath.
+- **Password** — **must** equal your `--oracle-password` value. The O5LOGON
+  handshake is mutual, so a wrong password fails the login.
+- **Service name / SID** — anything (e.g. `fusion`). It is ignored.
+
+### SQL Developer
+
+New Connection → **Connection Type: Basic**:
+
+| Field | Value |
+|---|---|
+| Username | anything, e.g. `fusion` |
+| Password | your `--oracle-password` value |
+| Hostname | `127.0.0.1` |
+| Port | `1521` (or your `--oracle-listen` port) |
+| Service name | anything, e.g. `fusion` — pick **Service name**, not SID |
+
+**Test** → *Success*, then **Connect**. SQL Developer runs some data-dictionary
+queries on connect; `ALL_*` views pass through to Fusion, `USER_*`/`DBA_*` come
+back empty (there is no single logical schema behind BI Publisher) — that's
+expected and doesn't block the connection.
+
+### SQLcl / python-oracledb
+
+```bash
+sql fusion/secret@127.0.0.1:1521/fusion
+```
+
+```python
+import oracledb
+oracledb.connect(user="fusion", password="secret", dsn="127.0.0.1:1521/fusion")
+```
+
+`fusion` is an arbitrary username, `secret` is your `--oracle-password`, and the
+service name after `/` is arbitrary. Validated against the thin drivers
+(SQL Developer, SQLcl, ojdbc, python-oracledb); `sqlplus` (OCI) speaks the same
+protocol and should also connect.
 
 ## psql
 

@@ -74,8 +74,11 @@ frontends run in one process and drain together on shutdown.
   --listen 127.0.0.1:5433 \
   --oracle-listen 127.0.0.1:1521 --oracle-password secret \
   --metadata-path ./metadata.db
-# psql on :5433, sqlplus/sqlcl/python-oracledb on :1521
+# psql on :5433, sqlcl/SQL Developer/python-oracledb on :1521
 ```
+
+Oracle clients log in with **any username** and the shared `--oracle-password`
+(the service name is ignored). See [Oracle clients](clients.md#oracle-clients-sql-developer-sqlcl-sqlplus) for the exact SQL Developer / SQLcl fields.
 
 ## Observability
 
