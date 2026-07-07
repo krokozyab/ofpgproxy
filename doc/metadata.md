@@ -37,7 +37,10 @@ The shipped `metadata.db` reflects a stock Fusion catalog at release time. When 
 
 The shipped releases include a refreshed catalog every few weeks. If you need a tenant-specific snapshot sooner — open a GitHub issue.
 
-To use a new file: replace `metadata.db` and bounce the proxy.
+Once you have a new file, swap it in either way:
+
+- **Hot reload (no restart).** Overwrite `metadata.db` in place, then `kill -HUP $(pgrep ofpgproxy)`. The proxy swaps the new catalog in atomically — connected clients see the new schema on their next query, no reconnect, and any in-flight query finishes against the previous catalog.
+- **Restart.** Replace the file and bounce the proxy. Clients re-authenticate (SSO) on the new process.
 
 ## What happens without a catalog
 
