@@ -1,13 +1,15 @@
 # Quick Start
 
-From zero to a working `SELECT` against Fusion in five minutes.
+From zero to a working query against Fusion in five minutes — over Oracle
+SQL*Net (`sqlplus`, SQL Developer, SQLcl, `dblink`), PostgreSQL wire, or both
+at once.
 
 ## 1. Prerequisites
 
 - macOS (Apple Silicon), Windows (x86_64), or Linux (x86_64).
 - Chrome / Chromium on `PATH` (only needed for SSO auth mode).
 - A Fusion Cloud tenant with the `RP_ARB.xdo` BI Publisher report deployed (download from [krokozyab/ofjdbc/otbireport](https://github.com/krokozyab/ofjdbc/tree/master/otbireport)) — typically under `/Custom/sql/RP_ARB.xdo` or `/Custom/Financials/RP_ARB.xdo`.
-- At least one PG-wire client: `psql`, DBeaver, or anything else from the [client recipes](clients.md).
+- At least one client: an Oracle client (`sqlplus`, SQL Developer, SQLcl) and/or a PG-wire client (`psql`, DBeaver) — see the [full client recipes](clients.md) either way.
 
 ## 2. Get the artefacts
 
@@ -29,29 +31,45 @@ Get-FileHash *.zip -Algorithm SHA256              # Windows PowerShell
 
 ## 3. Configure
 
-Create `.env` alongside the binary:
+The release ships a complete `.env.example` — every listener, all six auth
+modes, SOAP tuning, debug switches. Copy it rather than typing from scratch:
+
+```bash
+cp .env.example .env
+```
+
+Then edit `.env` down to what you actually need. At minimum, the tenant and
+auth mode:
 
 ```
 # Tenant
 FUSION_HOST=fa-xxxx.oraclecloud.com
 FUSION_SQL_REPORT_PATH=/Custom/sql/RP_ARB.xdo
 
-# Auth mode: sso | password | token-file
+# Auth mode: sso | password | token-file | token-refresh | client-credentials | jwt-assertion
 FUSION_AUTH_TYPE=sso
-
-# Only needed for FUSION_AUTH_TYPE=password
-# FUSION_USER=your.user
-# FUSION_PASSWORD=...
 ```
 
-Full reference: [Configuration](configuration.md) · [Authentication](auth.md)
+Pick which wire(s) to turn on — both can run from the same process:
+
+```
+# Oracle SQL*Net (sqlplus, SQL Developer, SQLcl, dblink) — off by default, opt in:
+OFPG_ORACLE_LISTEN=127.0.0.1:1521
+ORACLE_WIRE_PASSWORD=changeme   # YOU choose this value; required once OFPG_ORACLE_LISTEN is set
+
+# PostgreSQL wire (psql, DBeaver, Metabase, dbt, ...) — on by default at 127.0.0.1:5433,
+# override only if you need a different address:
+# OFPG_LISTEN=127.0.0.1:5433
+```
+
+Full reference: [Configuration](configuration.md) (every flag/env var, including `OFPG_METRICS_LISTEN` and SOAP concurrency/retry tuning) · [Authentication](auth.md) (all six modes)
 
 ## 4. (Optional) Validate before launching
 
-`./ofpgproxy doctor` checks your `.env`/`--metadata-path` config, opens
-`metadata.db`, and — unless you pass `--offline` — runs one real, bounded
-`SELECT 1 FROM DUAL` through Fusion, all without starting the proxy itself.
-Same env vars and flags as step 5 below:
+`./ofpgproxy doctor` checks your `.env`/`--metadata-path`/`--oracle-listen`
+config, opens `metadata.db`, and — unless you pass `--offline` — runs one
+real, bounded `SELECT 1 FROM DUAL` through Fusion, all without starting the
+proxy itself. Same env vars and flags as step 5 below:
 
 ```bash
 set -a; source .env; set +a
@@ -83,17 +101,37 @@ Get-Content .env | ForEach-Object {
 .\ofpgproxy.exe --metadata-path .\metadata.db
 ```
 
-Expected output:
+Expected output (with `OFPG_ORACLE_LISTEN` set — omit that line if you left it off):
 
 ```
 time=... level=INFO msg="pg_catalog emulation enabled, reading ./metadata.db (SIGHUP reloads)"
 time=... level=INFO msg="SSO: opening Chrome for Fusion login (300s timeout)"
 time=... level=INFO msg="ofpgproxy listening on 127.0.0.1:5433"
+time=... level=INFO msg="Oracle-wire (TNS) listening on 127.0.0.1:1521"
 ```
 
-On first SSO run the Chrome window points at your IdP — log in as you normally would. The captured token is held in-process until the proxy exits.
+On first SSO run the Chrome window points at your IdP — log in as you normally would. The captured token is held in-process and shared by both wires until the proxy exits.
 
 ## 6. Run your first query
+
+### sqlplus / SQL Developer / SQLcl
+
+```bash
+sqlplus fusion/changeme@//127.0.0.1:1521/fusion
+```
+
+```sql
+SELECT period_name, period_year
+FROM   gl_periods
+WHERE  period_year = 2024
+AND    ROWNUM <= 5;
+```
+
+`fusion` is an arbitrary username — use `FUSION` (uppercase) specifically if
+you also want `DESCRIBE`/catalog tree browsing to line up with the single
+logical schema every object is reported under. `changeme` is whatever you set
+`ORACLE_WIRE_PASSWORD` to. See [Connecting Oracle clients](clients.md#oracle-clients-sql-developer-sqlcl-sqlplus)
+for SQL Developer/SQLcl connection fields and `dblink` setup.
 
 ### psql
 
@@ -112,8 +150,8 @@ Username and database are placeholders — the proxy accepts any values.
 
 ### DBeaver
 
-1. New Connection → PostgreSQL (built-in driver).
-2. Host `127.0.0.1`, Port `5433`, Database `any`, User / Password any.
+1. New Connection → PostgreSQL (built-in driver) — or Oracle, pointed at `--oracle-listen`'s port.
+2. For PostgreSQL: Host `127.0.0.1`, Port `5433`, Database `any`, User / Password any.
 3. **Driver properties** → `preferQueryMode` = `simple`. (Optional but avoids binary-format parameter edge cases.)
 4. Test connection, finish.
 5. Schema tree: tables appear under `public` (or per-module schemas — `fscm`, `hcm`, `crm` — when the module is present in `metadata.db`).
@@ -121,12 +159,13 @@ Username and database are placeholders — the proxy accepts any values.
 
 ### Other clients
 
+- [A real Oracle database's own `dblink`](clients.md#oracle-dblink-a-real-oracle-database-as-the-client) — reconciliation scripts, migration validation, ad-hoc cross-database queries
 - [postgres_fdw](clients.md#postgres_fdw) — expose Fusion tables inside another PG
-- [dblink](clients.md#dblink) — ad-hoc cross-database queries
-- [pgx / psycopg / pgJDBC](clients.md#code-clients) — code integration
+- [pgx / psycopg / pgJDBC / ojdbc / python-oracledb](clients.md#code-clients) — code integration on either wire
 
 ## What's next
 
+- **[`ofpgproxy doctor --profiles`](configuration.md#ofpgproxy-doctor)** — see exactly which Oracle client/dialect/feature combinations this build has verified.
 - **[SQL compatibility](sql-compat.md)** — see which PG idioms get auto-rewritten and what edge cases to watch for.
 - **[Troubleshooting](troubleshooting.md)** — for the first time you hit an `ORA-…` message.
 - **[Configuration](configuration.md)** — every flag and env var the proxy honours.
