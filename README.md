@@ -106,7 +106,6 @@ psql -h localhost -p 5433 -U anyone -d any \
 | 🍳 [**Copy-paste recipes**](doc/recipes.md) | Ready-to-run scripts for DuckDB `ATTACH`, PG → proxy via `dblink` and `postgres_fdw`, with JOIN/CTAS examples |
 | 🔀 [**SQL compatibility**](doc/sql-compat.md) | Every PG→Oracle rewrite + known limitations + workarounds |
 | 🗂️ [**Metadata catalog**](doc/metadata.md) | What `metadata.db` contains and how to refresh it |
-| 🧬 [**Oracle-wire compatibility**](doc/oracle-compatibility.md) | Which Oracle client/dialect/feature combinations are verified — and `ofpgproxy doctor`, which checks your own installation |
 | 🚑 [**Troubleshooting**](doc/troubleshooting.md) | Common errors, what they mean, and how to fix them |
 
 ## 🕹️ How it feels in practice

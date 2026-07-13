@@ -94,15 +94,11 @@ client-side configuration. The transport is plain unencrypted TCP TNS only —
 actually turning ON native encryption/TCPS (`SQLNET.ENCRYPTION_*`) is still
 out of scope; terminate TLS in front of the proxy instead if you need that.
 
-"Both work" does not mean every client/dialect works identically — classic
-and fast-auth `sqlplus` are each verified only for specific scalar types in a
-single-column/single-row response, wide results (>255 columns) are verified
-only over `dblink`, and bind variables/NULL handling are unverified outside
-the thin ojdbc family. See
-[Oracle-wire client compatibility](oracle-compatibility.md) for the exact,
-evidence-graded breakdown, and [Oracle clients](clients.md#oracle-clients-sql-developer-sqlcl-sqlplus)
+"Both work" does not mean every client/dialect works identically — coverage
+varies by client and query shape. See [Oracle clients](clients.md#oracle-clients-sql-developer-sqlcl-sqlplus)
 for connection strings. `ofpgproxy doctor` reports which profile a real
-connection resolves to and warns (never blocks) on an unverified one.
+connection resolves to and warns (never blocks) on an unverified one; run
+`ofpgproxy doctor --profiles` for the full, evidence-graded breakdown.
 
 ## `ofpgproxy doctor`
 
@@ -129,7 +125,7 @@ unreachable) into a failure instead of a pass-with-warnings.
 Each of the 14 checks reports `pass`/`warn`/`fail`/`skip`; exit code is `0`
 with no failures, `1` with at least one, `2` for a bad flag or setup error.
 `oracle.compatibility` summarizes the same registry `--profiles` prints in
-full — see [Oracle-wire client compatibility](oracle-compatibility.md).
+full.
 
 ## Observability
 

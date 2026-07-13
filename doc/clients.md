@@ -81,15 +81,10 @@ Services) handshake that thin drivers skip; the proxy answers it with a
 transparently — no client-side configuration needed.
 
 Exactly how far each client/dialect is verified — down to specific types,
-bind variables, NULL handling, and column-count limits — is graded
-honestly (not aspirationally) in
-**[Oracle-wire client compatibility](oracle-compatibility.md)**, generated
-from the same registry `ofpgproxy doctor --profiles` reads. The short version:
-classic `sqlplus` and fast-auth (23ai) `sqlplus` are each verified only for a
-single-column/single-row response of specific scalar types (fast-auth has no
-DATE type at all); wide results (>255 columns) are verified only for the
-`dblink` dialect; bind variables and NULL handling are unverified for classic
-OCI and `dblink`. None of this is a rejection — an unverified path just isn't
+bind variables, NULL handling, and column-count limits — is graded honestly
+(not aspirationally) against the same registry `ofpgproxy doctor --profiles`
+reads; run that command against your own build for the full, evidence-graded
+breakdown. None of this is a rejection — an unverified path just isn't
 guaranteed, and `ofpgproxy doctor` will warn (never block) when a connection
 resolves to one.
 
@@ -114,11 +109,8 @@ only run session no-ops (`ALTER SESSION`, `COMMIT`/`ROLLBACK`) work; any real
 write is rejected.
 
 Verified scope for a direct `sqlplus` session is narrower than "ordinary
-SELECTs" suggests: single-column/single-row responses of NUMBER/VARCHAR2/DATE
-for a pre-23ai client, or 9 scalar types + CLOB (no DATE) for a 23ai/26ai
-fast-auth client — see
-[Oracle-wire client compatibility](oracle-compatibility.md) for the exact,
-evidence-graded breakdown before relying on multi-column results, bind
+SELECTs" suggests — run `ofpgproxy doctor --profiles` for the exact,
+evidence-graded breakdown before relying on wide multi-column results, bind
 variables, or NULL handling in a script.
 
 ### Oracle `dblink` (a real Oracle database as the client)
@@ -146,10 +138,8 @@ instance runs is on you (VPN, a reverse tunnel, or routing the two onto the
 same network) — the proxy doesn't do any of that itself.
 
 `dblink` is the one dialect verified for **wide results (>255 columns)** —
-confirmed against a real 288-column, all-NUMBER table capture. Bind variables
-and NULL cell values are unverified over `dblink`; see
-[Oracle-wire client compatibility](oracle-compatibility.md) for the full
-per-feature grading.
+confirmed against a real 288-column, all-NUMBER table capture. Run
+`ofpgproxy doctor --profiles` for the full per-feature grading.
 
 ## psql
 
