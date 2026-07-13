@@ -69,9 +69,10 @@ capture backing it.
 
 Overall: **verified**, but narrowly scoped. Protocol versions 315–319.
 
-**Verified scope is single-column, single-row NUMBER/VARCHAR2/DATE only** —
-wider or other-typed shapes need their own live captures before being
-trusted.
+**Verified scope is single-column NUMBER/VARCHAR2/DATE, plus a 2-column,
+2-row multi-column/NULL shape** — wider (3+ column) or other-typed shapes
+need their own live captures before being trusted. Bind variables are a
+confirmed **gap**, not just untested — see below.
 
 | Feature | Grade | Notes |
 |---|---|---|
@@ -79,9 +80,9 @@ trusted.
 | NUMBER | **verified** | 7 live sqlplus captures; 2-row FETCH verified. |
 | VARCHAR2 | **verified** | 7 live sqlplus captures; single-row only. |
 | DATE | **verified** | 7 live sqlplus captures; single-row only. |
-| Bind variables | unknown | No capture or test exists with an actual bind variable over classic OCI. |
-| NULL values | unknown | Only a retired function's design note, not a live capture of an actual NULL cell. |
-| Multi-row/multi-column | unknown | Scoped to single-column responses. |
+| Bind variables | **unsupported** | A real Instant Client 19.8 sqlplus capture of a genuine bind-carrying EXECUTE (`... WHERE id = :n`) parses to zero binds — `parseOCIExecuteRequest` only ever reads bind data `if fastAuth`; there is no equivalent code path for classic OCI at all. The raw capture's tail visibly resembles a bind-shaped block, so the data may be on the wire but is simply never read. |
+| NULL values | **verified** | A real 2-column (NUMBER, VARCHAR2 NULL) row, byte-exact against a live sqlplus capture. Verified within EXECUTE's own inline row only — a FETCH-delivered NULL row is still unverified. |
+| Multi-row/multi-column | **verified** | A real 2-column, 2-row result (EXECUTE delivers row 1, a follow-up FETCH delivers row 2), byte-exact against a live sqlplus capture. Verified up to 2×2 only. |
 | Wide results (>255 cols) | **unsupported** | `oci_describe.go` scopes itself to single-column/single-row only. |
 | ANO encryption / TCPS | **unsupported** | See [below](#ano--native-encryption--tcps). |
 
