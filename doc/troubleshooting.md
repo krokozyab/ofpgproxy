@@ -2,6 +2,31 @@
 
 When something unexpected comes back from the proxy, check here before chasing into logs.
 
+## `sqlplus` / OCI (thick / Instant Client) connection problems
+
+`sqlplus` and other OCI "thick" clients (including a real Oracle database's
+own `dblink`) are supported against a **modern (23ai-era) Instant Client** —
+see [Oracle clients → sqlplus](clients.md#sqlplus) and [Oracle
+`dblink`](clients.md#oracle-dblink-a-real-oracle-database-as-the-client). If
+one still won't connect:
+
+- `ORA-12537: TNS:connection closed` / `ORA-12541: TNS:no listener`-class
+  errors, or a login that hangs then drops right after the data-type
+  negotiation — almost always means the client asked for **encryption or
+  native network services beyond plain negotiation** (`SQLNET.ENCRYPTION_CLIENT
+  =REQUIRED`, TCPS in `sqlnet.ora`). The proxy only ever answers ANO with a
+  "no native security" selection and speaks unencrypted TCP TNS — a client
+  that insists on encryption still fails at that step. Drop the encryption
+  requirement client-side, or terminate TLS in front of the proxy if you need
+  transport security.
+- Client trace (`sqlnet.ora` `TRACE_LEVEL_CLIENT=16`) showing `nsnactl: error
+  exit` with `ns=12534` points at the same ANO/encryption mismatch.
+- A **very old** Instant Client (pre-dates the 23ai TTC dialect this listener
+  implements) may not negotiate the shape the proxy expects — if you hit this,
+  a thin driver (**SQLcl**, the drop-in `sqlplus` replacement) sidesteps the
+  whole OCI/ANO path entirely and is worth trying as a quick check that the
+  proxy itself is reachable and configured correctly.
+
 ## Oracle errors coming through
 
 Every `ORA-…` is forwarded from Fusion with a matching PostgreSQL SQLSTATE. The text is the original Oracle message — don't strip it, it's the quickest clue to the actual problem.
@@ -100,6 +125,23 @@ Raise the cap for interactive use:
 ```
 
 Sizing notes are in [Configuration → SOAP concurrency](configuration.md#soap-concurrency). The default stays low because BI Publisher accumulates server-side sessions; pushing it too high makes the tenant start refusing logins.
+
+### SQL Developer / VS Code extension: tree expands with no error but no tables/views listed
+
+The connection's **username** isn't `FUSION`. SQL Developer's own "Tables"/"Views"
+tree nodes run a `SYS.DBA_OBJECTS`-style query filtered `WHERE OWNER = <your
+connected username>` — the client fills this in itself, client-side, from
+whatever username it authenticated with; it never asks the proxy what the
+"real" schema is. The proxy reports every object as owned by the single
+logical schema `FUSION` (see [Connecting clients → Oracle
+clients](clients.md#oracle-clients-sql-developer-sqlcl-sqlplus)), so any other
+username makes the tree query run successfully (no `ORA-` error) and just
+return zero rows.
+
+Fix: edit the connection and set **Username** to `FUSION` (the *password*
+stays your `--oracle-password` value — username isn't otherwise validated).
+Ad-hoc `SELECT`/`DESCRIBE` queries you type yourself aren't affected either
+way — this only breaks the auto-generated tree-browsing queries.
 
 ### Empty `\d <table>` or empty Metabase schema sync
 

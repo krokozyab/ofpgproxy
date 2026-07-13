@@ -20,8 +20,16 @@ password), the Oracle side has one shared password **you choose** and set with
 `--oracle-password` / `ORACLE_WIRE_PASSWORD`. The client must send that exact
 value:
 
-- **Username** — anything (e.g. `fusion`). *Not* validated; real access control
-  is the Fusion session the proxy holds underneath.
+- **Username** — not validated (any value authenticates); real access control
+  is the Fusion session the proxy holds underneath. **Use `FUSION` specifically**
+  if you want IDE tree-browsing (SQL Developer, its VS Code extension, DBeaver's
+  Oracle driver) to actually show tables/views: every object the proxy reports
+  is owned by the single logical schema `FUSION`, and these tools default their
+  "Tables"/"Views" tree query to `WHERE OWNER = <your connected username>` —
+  entirely client-side, no server round trip — so any *other* username makes
+  the tree render successfully but empty (no error, just nothing under
+  Tables/Views). Ad-hoc `SELECT`/`DESCRIBE` queries aren't affected by this —
+  only the tree's own auto-generated catalog queries are.
 - **Password** — **the value you set** in `--oracle-password` /
   `ORACLE_WIRE_PASSWORD` (there's no default — the proxy won't start the Oracle
   listener without one). A wrong password fails the O5LOGON mutual handshake.
@@ -33,16 +41,18 @@ New Connection → **Connection Type: Basic**:
 
 | Field | Value |
 |---|---|
-| Username | anything, e.g. `fusion` |
+| Username | **`FUSION`** — see the note above; anything else authenticates fine but leaves the Tables/Views tree empty |
 | Password | your `--oracle-password` value |
 | Hostname | `127.0.0.1` |
 | Port | `1521` (or your `--oracle-listen` port) |
 | Service name | anything, e.g. `fusion` — pick **Service name**, not SID |
 
 **Test** → *Success*, then **Connect**. SQL Developer runs some data-dictionary
-queries on connect; `ALL_*` views pass through to Fusion, `USER_*`/`DBA_*` come
-back empty (there is no single logical schema behind BI Publisher) — that's
-expected and doesn't block the connection.
+queries on connect; `ALL_*`/`USER_*`/`DBA_*` views are all answered locally
+from `metadata.db` (not sent to Fusion) — including the "Tables"/"Views" tree
+nodes' own `SYS.DBA_OBJECTS`-style queries. If the tree expands with **no
+error but an empty list**, the connection's username isn't `FUSION` — see the
+Username note above, not a bug to report.
 
 ### SQLcl / python-oracledb
 
@@ -56,9 +66,62 @@ oracledb.connect(user="fusion", password="secret", dsn="127.0.0.1:1521/fusion")
 ```
 
 `fusion` is an arbitrary username, `secret` is your `--oracle-password`, and the
-service name after `/` is arbitrary. Validated against the thin drivers
-(SQL Developer, SQLcl, ojdbc, python-oracledb); `sqlplus` (OCI) speaks the same
-protocol and should also connect.
+service name after `/` is arbitrary.
+
+**Supported clients — thin AND thick drivers.** The Oracle-wire frontend
+supports both: **thin** (pure-Java / pure-Python) drivers — SQL Developer,
+SQLcl, ojdbc, DBeaver's Oracle driver, python-oracledb in thin mode — and
+**thick / OCI** clients built on a modern (23ai-era) Instant Client, including
+`sqlplus` itself and a real Oracle database's own `dblink` (see
+[Oracle `dblink`](#oracle-dblink-a-real-oracle-database-as-the-client) below).
+Thick clients negotiate the Oracle Advanced Networking (ANO / Native Network
+Services) handshake that thin drivers skip; the proxy answers it with a
+"no native security" selection, which modern Instant Client versions accept
+transparently — no client-side configuration needed.
+
+**Still unsupported:** actually *enabling* ANO's native encryption
+(`SQLNET.ENCRYPTION_CLIENT=REQUIRED`, TCPS in `sqlnet.ora`) — the proxy speaks
+only unencrypted TCP TNS and advertises "no native security," so a client that
+insists on encryption still fails. If you need transport encryption, terminate
+TLS in front of the proxy instead (stunnel, a cloud load balancer, etc.).
+
+### sqlplus
+
+```bash
+sqlplus fusion/secret@//127.0.0.1:1521/fusion
+```
+
+Same credentials as SQLcl above — `fusion` is an arbitrary username (use
+`FUSION` if you also want the `DESCRIBE`/`SHOW` catalog commands to line up
+with the single logical schema every object is reported under), `secret` is
+your `--oracle-password`, service name after `/` is arbitrary. Ordinary
+`SELECT`s, `DESCRIBE`, and `DBMS_OUTPUT`-free anonymous PL/SQL blocks that
+only run session no-ops (`ALTER SESSION`, `COMMIT`/`ROLLBACK`) work; any real
+write is rejected.
+
+### Oracle `dblink` (a real Oracle database as the client)
+
+A real Oracle instance can reach Fusion through the proxy over its own native
+`dblink`, so existing PL/SQL — reconciliation scripts, migration validation,
+anything already written to query a remote Oracle schema with plain SQL —
+can read Fusion data without going through OIC or authoring a BI Publisher
+report per query:
+
+```sql
+CREATE DATABASE LINK fusion_link
+  CONNECT TO fusion IDENTIFIED BY secret
+  USING '(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=<proxy-host>)(PORT=1521))
+          (CONNECT_DATA=(SERVICE_NAME=fusion)))';
+
+SELECT je_header_id, accounted_dr
+FROM   gl_je_lines@fusion_link
+WHERE  ROWNUM <= 5;
+```
+
+Read-only, same as every other Oracle-wire client — any DML over the link is
+rejected. The proxy's own network reachability from wherever the real Oracle
+instance runs is on you (VPN, a reverse tunnel, or routing the two onto the
+same network) — the proxy doesn't do any of that itself.
 
 ## psql
 

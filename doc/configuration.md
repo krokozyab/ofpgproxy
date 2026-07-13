@@ -80,6 +80,17 @@ frontends run in one process and drain together on shutdown.
 Oracle clients log in with **any username** and the shared `--oracle-password`
 (the service name is ignored). See [Oracle clients](clients.md#oracle-clients-sql-developer-sqlcl-sqlplus) for the exact SQL Developer / SQLcl fields.
 
+**Thin and thick drivers both work.** Supported clients include the thin
+(pure-Java / pure-Python) Oracle drivers — SQL Developer, SQLcl, ojdbc,
+DBeaver's Oracle driver, python-oracledb (thin mode) — as well as thick / OCI
+clients built on a modern (23ai-era) Instant Client, including `sqlplus`
+itself and a real Oracle database's own `dblink`. Thick clients' Advanced
+Networking (ANO) handshake is answered with a "no native security" selection,
+which modern Instant Client accepts without any client-side configuration.
+The transport is plain unencrypted TCP TNS only — actually turning ON native
+encryption/TCPS (`SQLNET.ENCRYPTION_*`) is still out of scope; terminate TLS
+in front of the proxy instead if you need that. See [Oracle clients](clients.md#oracle-clients-sql-developer-sqlcl-sqlplus).
+
 ## Observability
 
 `--metrics-listen`/`OFPG_METRICS_LISTEN` (requires `--oracle-listen`) starts a
@@ -138,6 +149,34 @@ The active value shows in the startup banner under `soap`:
 soap       1 concurrent call (serialised — ofjdbc default)
 soap       4 concurrent calls
 ```
+
+## Retry and backoff
+
+Every BI Publisher SOAP call retries with exponential backoff and jitter on
+transient failures — a 5xx/408/429 response, a connection reset, or a
+timeout. A real `ORA-…` error or an auth failure is never retried (retrying
+a malformed query or bad credentials just reproduces the same failure).
+Defaults mirror `ofjdbc`'s own retry logic: 3 attempts total, 1s base delay,
+2x growth, capped at 30s, +/-20% jitter.
+
+Env-only (no CLI flag — these are tune-once-per-deployment settings):
+
+| Env | Default | Description |
+|---|---|---|
+| `FUSION_SOAP_RETRY_MAX_ATTEMPTS` | `3` | Total attempts including the first try. |
+| `FUSION_SOAP_RETRY_BASE_DELAY_MS` | `1000` | Delay before the first retry. |
+| `FUSION_SOAP_RETRY_MAX_DELAY_MS` | `30000` | Backoff cap. |
+| `FUSION_SOAP_RETRY_MULTIPLIER` | `2.0` | Delay growth per attempt. |
+
+```bash
+FUSION_SOAP_RETRY_MAX_ATTEMPTS=5 FUSION_SOAP_RETRY_MAX_DELAY_MS=10000 make run
+```
+
+Streaming foreign SELECTs (large tables fetched row-by-row instead of
+buffered) only retry a failure that happens **before any row reached the
+client** — once even one row has streamed out, a retry is skipped even for an
+otherwise-retryable error, since resending the whole SOAP call would
+redeliver rows the client already has.
 
 ## SQL Translator playground
 
