@@ -1,16 +1,17 @@
 <div align="center">
   <h1>✨ ofpgproxy</h1>
-  <p><strong>Expose Oracle Fusion Cloud as a native PostgreSQL database.</strong></p>
-  <p>Connect Metabase, Superset, Grafana, dbt, and DBeaver directly to your Fusion tenant using native PostgreSQL drivers. Zero custom connectors. Just plug in, type <code>SELECT</code>, and watch the data stream.</p>
+  <p><strong>Talk to Oracle Fusion Cloud in native Oracle SQL*Net — <code>sqlplus</code>, SQL Developer, SQLcl, ojdbc, even a real Oracle database's own <code>dblink</code> — no rewrite, no OIC, no custom integration.</strong></p>
+  <p>PostgreSQL wire protocol comes along for the ride too, so Metabase, Superset, Grafana, dbt, and DBeaver connect just as natively — same binary, same tenant, your pick of wire.</p>
 
   <br />
-  
-  <img src="assets/fpg.png" alt="ofpgproxy Architecture" width="800" />
+
+  <img src="assets/dual-protocol.png" alt="ofpgproxy speaks both Oracle SQL*Net and PostgreSQL wire protocol to Oracle Fusion Cloud" width="850" />
 
   <br />
   <br />
 
   <a href="https://github.com/krokozyab/ofpgproxy/releases/latest"><img src="https://img.shields.io/badge/download-latest-success?style=flat-square&logo=github" alt="Latest release" /></a>
+  <img src="https://img.shields.io/badge/Oracle_SQLNet-Supported-F80000?style=flat-square&logo=oracle&logoColor=white" alt="Oracle SQL*Net" />
   <img src="https://img.shields.io/badge/PostgreSQL-14%2B-336791?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL Compatible" />
   <img src="https://img.shields.io/badge/Oracle_Fusion-Supported-F80000?style=flat-square&logo=oracle&logoColor=white" alt="Oracle Fusion" />
   <!--[![GitHub Downloads](https://img.shields.io/github/downloads/krokozyab/ofpgproxy/total?style=for-the-badge&logo=github)](https://github.com/krokozyab/ofpgproxy/releases)-->
@@ -19,46 +20,50 @@
   <br />
 </div>
 
-Oracle Fusion Cloud's BI Publisher is the only sanctioned read-path out of a SaaS tenant. It speaks SOAP, returns base64-wrapped XML, and every analytics tool your team *actually* wants to use expects PostgreSQL. 
+Oracle Fusion Cloud's BI Publisher is the only sanctioned read-path out of a SaaS tenant. It speaks SOAP, returns base64-wrapped XML — and every Oracle client you already own (`sqlplus`, a reconciliation script over `dblink`, SQL Developer, an ojdbc-based service) expects the real Oracle wire protocol instead.
 
-**`ofpgproxy` sits between them and makes them agree.**
+**`ofpgproxy` sits between them and makes them agree — one binary, two wire protocols, the same Fusion tenant underneath.**
 
 ```text
-  SQL Clients       BI & Dashboards     Data Integration
- (DBeaver, psql)  (Metabase, Superset)   (DuckDB, dbt)
-         │                 │                   │
-         └─────────────────┼───────────────────┘
-                           │   ✨ PostgreSQL wire protocol
-                           ▼
-                   ┌───────────────┐
-                   │   ofpgproxy   │
-                   └───────────────┘
-                           │
-                           │   ⚡️ SOAP (BI Publisher · RP_ARB.xdo)
-                           ▼
-                  Oracle Fusion Cloud tenant
+   Oracle clients                     SQL / BI / Data tools
+ (sqlplus, SQL Developer,           (psql, DBeaver, Metabase,
+  SQLcl, dblink, ojdbc)                Superset, DuckDB, dbt)
+         │                                     │
+         │  🔶 Oracle SQL*Net (TNS/TTC)        │  ✨ PostgreSQL wire protocol
+         ▼                                     ▼
+                     ┌───────────────┐
+                     │   ofpgproxy   │
+                     └───────────────┘
+                             │
+                             │   ⚡️ SOAP (BI Publisher · RP_ARB.xdo)
+                             ▼
+                    Oracle Fusion Cloud tenant
 ```
 
-### 🎯 PostgreSQL Compatibility Layers
+### 🎯 Native Oracle, no rewrite required
 
-PostgreSQL compatibility isn't just about the port number. `ofpgproxy` bridges the gap across the layers that matter for analytics:
+Point existing Oracle tooling straight at Fusion — nothing to port:
+*   **`sqlplus` / SQL Developer / SQLcl** — `CONNECT`, `SELECT`, `DESCRIBE` work exactly like against a real instance.
+*   **A real Oracle database's own `dblink`** — reconciliation scripts, migration validation, anything already written to query a remote Oracle schema keeps working unchanged.
+*   **ojdbc / python-oracledb** — service code that already speaks the Oracle driver connects without touching a line.
+*   *Note: read-only by construction — BI Publisher can't write, so DML is rejected regardless of client.*
+
+### 🐘 PostgreSQL, as an additional wire
+
+The same tenant is also reachable over the PostgreSQL wire protocol — useful when your tooling is Postgres-native instead of Oracle-native:
 *   **Wire Protocol:** Native support for Postgres connections (JDBC, ODBC, libpq, pgx, psycopg).
 *   **System Catalogs:** Emulates `pg_catalog` and `information_schema` so clients instantly discover 30,000+ tables.
 *   **SQL Dialect:** Translates Postgres idioms (`ILIKE`, `date_trunc`, `~`, `EXCEPT`) into Oracle SQL on the fly.
-*   *Note: As a read-only analytical proxy, it intentionally does not support transactions, DML, or Postgres extensions.*
 
-Because of this deep emulation, it works natively with:
-*   **SQL Clients:** DBeaver, DataGrip, TablePlus, pgAdmin, `psql`.
-*   **BI & Dashboards:** Superset, Metabase, Redash, Grafana, Tableau, Power BI.
-*   **Data Integration:** DuckDB, `postgres_fdw`, dbt, `dblink`.
+Works natively with: **SQL Clients** (DBeaver, DataGrip, TablePlus, pgAdmin, `psql`), **BI & Dashboards** (Superset, Metabase, Redash, Grafana, Tableau, Power BI), **Data Integration** (DuckDB, `postgres_fdw`, dbt).
 
 ---
 
 ## 💡 Why you need this
 
-* **Stop fighting the BI bottleneck:** Plug Metabase, Superset, or Grafana directly into Fusion. No more waiting weeks for custom data engineering pipelines just to see a basic chart.
-* **Give analysts their tooling back:** DBeaver tree navigation, autocomplete, query history, and result grids all work natively. 
-* **Seamless data pipelines:** Use `postgres_fdw` to bring Fusion live into your reporting DB, or let DuckDB pull it straight into your Jupyter notebooks.
+* **Reuse the Oracle stack you already have:** `dblink`-based reconciliation, `sqlplus` scripts, SQL Developer habits — none of it needs to be rewritten for Fusion.
+* **Stop fighting the BI bottleneck:** Plug Metabase, Superset, or Grafana directly into Fusion over Postgres wire. No more waiting weeks for a custom data pipeline just to see a basic chart.
+* **Give analysts their tooling back:** DBeaver tree navigation, autocomplete, query history, and result grids all work natively, on either wire.
 
 ## 🚀 60-Second Magic Start
 
@@ -70,28 +75,34 @@ Because of this deep emulation, it works natively with:
 #    Two .zip files — double-click to extract on macOS Finder or Windows Explorer.
 ./ofpgproxy --version
 
-# 2. Point it at your Oracle Fusion tenant
+# 2. Point it at your Oracle Fusion tenant — Oracle wire AND Postgres wire, one process
 FUSION_HOST=fa-xxxx.oraclecloud.com FUSION_AUTH_TYPE=sso \
-  ./ofpgproxy --metadata-path ./metadata.db
+  ./ofpgproxy --metadata-path ./metadata.db \
+              --oracle-listen 127.0.0.1:1521 --oracle-password secret
 
-# 3. Connect with ANYTHING that speaks Postgres
+# 3a. Connect with a real Oracle client
+sqlplus fusion/secret@//127.0.0.1:1521/fusion
+
+# 3b. ...or with ANYTHING that speaks Postgres
 psql -h localhost -p 5433 -U anyone -d any \
   -c "SELECT period_name, period_year FROM gl_periods LIMIT 5"
 ```
 
-*First run opens your IdP in Chrome. After login, the SSO token is held in-process. DBeaver, Metabase, and Grafana can connect to the same port without re-authenticating. If your tenant supports it, standard basic authentication (`--auth=password`) is also available.*
+*First run opens your IdP in Chrome. After login, the SSO token is held in-process and shared by both wires. If your tenant supports it, standard basic authentication (`--auth=password`) is also available.*
 
-👉 **[Read the Full Quick Start Guide](doc/quickstart.md)**
+👉 **[Read the Full Quick Start Guide](doc/quickstart.md)** · **[Connecting Oracle clients](doc/clients.md#oracle-clients-sql-developer-sqlcl-sqlplus)**
 
 ## 🦸‍♂️ What you get out of the box
 
-* 🔌 **Zero Custom Glue.** Wire-protocol passthrough means no specialized SDKs or custom integrations are required. If your tool speaks PostgreSQL, it already speaks Fusion.
-* 📚 **30,000+ Tables Pre-Indexed.** Ships with a lightning-fast DuckDB catalog. `\d`, `information_schema.tables`, Metabase schema sync, and dbt `--full-refresh` work immediately.
+* 🔌 **Zero Custom Glue, Either Wire.** No specialized SDKs or custom integrations — if your tool speaks Oracle SQL*Net *or* PostgreSQL, it already speaks Fusion.
+* 🔶 **Real Oracle Wire Protocol.** `sqlplus`, SQL Developer, SQLcl, ojdbc, and a real Oracle database's own `dblink` connect over genuine TNS/TTC — not an emulation layer bolted onto a driver.
+* 📚 **30,000+ Tables Pre-Indexed.** Ships with a lightning-fast DuckDB catalog. `\d`/`DESCRIBE`, `information_schema.tables`, Metabase schema sync, and dbt `--full-refresh` work immediately.
 * 🌊 **Memory-Efficient Streaming.** Results flow through the proxy as they arrive from Oracle. The proxy itself doesn't buffer massive datasets in memory, keeping its resource footprint tiny.
-* 🧠 **Pagination Support.** Transparently handles `OFFSET` and `LIMIT` / `FETCH` clauses. IDEs like DBeaver and DataGrip can fetch just the first page of results, avoiding massive full-table scans when you're just exploring data.
+* 🧠 **Pagination Support.** Transparently handles `OFFSET`/`LIMIT`/`FETCH`. IDEs like DBeaver and DataGrip can fetch just the first page of results, avoiding massive full-table scans when you're just exploring data.
 * 🪄 **PostgreSQL → Oracle SQL Auto-Translation.** `TRUE/FALSE`, `ILIKE`, regex `~`, `date_trunc`, `EXCEPT`, `WITH RECURSIVE`, and more are translated automatically on the fly. [See the full matrix](doc/sql-compat.md).
-* 🛡️ **Real PostgreSQL Errors.** `ORA-00942` seamlessly becomes SQLSTATE `42P01 undefined_table`. Your tools react exactly as they should.
-* 🔒 **Read-Only by Design.** BI Publisher can't write, and neither will the proxy. No accidental DML. Sleep soundly.
+* 🛡️ **Real Protocol-Native Errors.** `ORA-00942` reaches an Oracle client unchanged, and becomes SQLSTATE `42P01 undefined_table` for a Postgres one. Your tools react exactly as they should either way.
+* 🔒 **Read-Only by Design.** BI Publisher can't write, and neither will the proxy. No accidental DML, on any wire. Sleep soundly.
+* 🩺 **Built-in `doctor`.** `ofpgproxy doctor` validates config, `metadata.db`, and Fusion reachability — and reports exactly which Oracle client/dialect combinations this build has verified — before you ever point a real client at it. [Details](doc/configuration.md#ofpgproxy-doctor).
 * 🧪 **Built-in Translator Playground.** Launch with `--translate-http 127.0.0.1:8080` to get an offline web UI (and JSON endpoint) that shows, for any SQL you paste, which router branch it hits and the rewritten Oracle / DuckDB statement — no Fusion connection needed. [Details](doc/configuration.md#sql-translator-playground).
 
 ## 📖 Documentation
@@ -99,10 +110,10 @@ psql -h localhost -p 5433 -U anyone -d any \
 | Guide | Description |
 |---|---|
 | 🏎️ [**Quick Start**](doc/quickstart.md) | Zero to your first `SELECT` in 5 minutes |
-| ⚙️ [**Configuration**](doc/configuration.md) | Flags, env vars, ports, the Oracle-wire frontend, and signals |
+| 🤝 [**Connecting clients**](doc/clients.md) | Recipes for `sqlplus`, SQL Developer, SQLcl, `dblink`, psql, DBeaver, DuckDB, `postgres_fdw`, pgx/psycopg/pgJDBC |
+| ⚙️ [**Configuration**](doc/configuration.md) | Flags, env vars, ports, the Oracle-wire frontend, `ofpgproxy doctor`, and signals |
 | 🔑 [**Authentication**](doc/auth.md) | SSO, password, token-file, and OAuth (refresh / client-credentials / JWT-assertion) modes |
 | 📈 [**Observability**](doc/observability.md) | Prometheus `/metrics`, `/healthz`, `/readyz` |
-| 🤝 [**Connecting clients**](doc/clients.md) | Recipes for psql, DBeaver, DuckDB, `postgres_fdw`, `dblink`, pgx/psycopg/pgJDBC |
 | 🍳 [**Copy-paste recipes**](doc/recipes.md) | Ready-to-run scripts for DuckDB `ATTACH`, PG → proxy via `dblink` and `postgres_fdw`, with JOIN/CTAS examples |
 | 🔀 [**SQL compatibility**](doc/sql-compat.md) | Every PG→Oracle rewrite + known limitations + workarounds |
 | 🗂️ [**Metadata catalog**](doc/metadata.md) | What `metadata.db` contains and how to refresh it |
@@ -110,10 +121,10 @@ psql -h localhost -p 5433 -U anyone -d any \
 
 ## 🕹️ How it feels in practice
 
-You run the binary. You get a PostgreSQL endpoint on `:5433` — except the tables inside are Oracle Fusion's. 
+You run the binary. You get an Oracle SQL*Net endpoint on `:1521` and a PostgreSQL endpoint on `:5433` — except the tables inside are Oracle Fusion's.
 
-Everything that speaks PG just connects: `psql`, DBeaver, Metabase, Grafana, dbt, a Python script using psycopg, another PostgreSQL database using `postgres_fdw`, a JVM service on pgJDBC. Each query transparently becomes a BI Publisher SOAP call under the hood; rows stream back as the XML arrives. 
+Everything that speaks either wire just connects: `sqlplus`, SQL Developer, SQLcl, a real Oracle database's `dblink`, `psql`, DBeaver, Metabase, Grafana, dbt, a Python script using psycopg or python-oracledb, a JVM service on pgJDBC or ojdbc. Each query transparently becomes a BI Publisher SOAP call under the hood; rows stream back as the XML arrives.
 
-**Your tools never find out it isn't a real PostgreSQL database.**
+**Your tools never find out it isn't a real database.**
 
-*Actively developed. Expect rough edges on exotic SQL shapes — see [SQL compatibility](doc/sql-compat.md) for the current matrix, and open an issue when you hit one.*
+*Actively developed. Expect rough edges on exotic SQL shapes and unverified client/dialect combinations — `ofpgproxy doctor --profiles` shows exactly what's covered today, and [SQL compatibility](doc/sql-compat.md) has the current PG→Oracle matrix. Open an issue when you hit one.*
