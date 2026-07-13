@@ -47,16 +47,23 @@ backing it.
 
 ojdbc, SQLcl, SQL Developer, and SQL Developer for VS Code — identified by
 the `Java_TTC-*` TTIPRO driver-name prefix every real capture of these
-clients has shown. Overall: **experimental**. Protocol versions 300–319.
+clients has shown. Overall: **verified**. Protocol versions 300–319.
+
+Every feature below is verified specifically against a real **SQLcl 26.1**
+session (ojdbc thin driver, `driver_name` `Java_TTC-8.2.0`); `auth.go`/
+`execute.go` branch only on `ojdbcDialect` (true for the whole `Java_TTC-*`
+family), not on a specific driver version, so the same code serves SQL
+Developer/its VS Code extension/raw ojdbc, but only SQLcl has an actual
+capture backing it.
 
 | Feature | Grade | Notes |
 |---|---|---|
-| O5LOGON auth | experimental | Live-verification prose only. |
-| EXECUTE/FETCH | experimental | Shares the same untested core marshaling as `thin-generic`; distinguished only by ojdbc-specific chunking behavior. |
+| O5LOGON auth | **verified** | `auth_test.go` — real AUTH_PHASE_ONE/TWO captures (username uppercased `FUSION`, `AUTH_PROGRAM_NM` `SQLcl`). |
+| EXECUTE/FETCH | **verified** | `fetch_test.go` — a real EXECUTE round-trip, rebuilt response matches the capture byte-for-byte (`ojdbcDialect=true` CLR-chunking shape). |
 | Bind variables | **verified** | `bind_test.go:TestSubstituteBindParamsSQLDeveloperViewsTreeQuery` — a real SQL Developer session's own bug, fixed and pinned. |
-| NULL values | unknown | |
-| Multi-row/multi-column | unknown | |
-| Wide results (>255 cols) | unknown | |
+| NULL values | **verified** | `fetch_test.go` — a real NULL cell, byte-exact against the capture. |
+| Multi-row/multi-column | **verified** | `fetch_test.go` — 3 columns × 3 rows, all delivered in ONE EXECUTE response (SQLcl's default prefetch is larger than python-oracledb's, no FETCH round-trip needed). Verified only up to this shape. |
+| Wide results (>255 cols) | **verified** | `wide_test.go` — a real 300-column, 1-row capture via SQLcl, confirming the thin dialect's lack of an OCI/dblink-style >255-column limitation isn't python-oracledb-specific. Verified for a single row only. |
 
 ## Classic OCI — `sqlplus` on a pre-23ai / non-fast-auth Instant Client (`classic-oci-sqlplus`)
 
