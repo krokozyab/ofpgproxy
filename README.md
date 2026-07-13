@@ -96,7 +96,7 @@ psql -h localhost -p 5433 -U anyone -d any \
 
 * 🔌 **Zero Custom Glue, Either Wire.** No specialized SDKs or custom integrations — if your tool speaks Oracle SQL*Net *or* PostgreSQL, it already speaks Fusion.
 * 🔶 **Native Oracle SQL*Net (TNS/TTC).** `sqlplus`, SQL Developer, SQLcl, ojdbc, and a real Oracle database's own `dblink` connect over the real wire bytes — a from-scratch protocol implementation, not an emulation layer bolted onto a driver.
-* 📚 **30,000+ Tables Pre-Indexed.** Ships with a lightning-fast DuckDB catalog. `\d`/`DESCRIBE`, `information_schema.tables`, Metabase schema sync, and dbt `--full-refresh` work immediately.
+* 📚 **Metadata Pre-Indexed.** Ships with a lightning-fast DuckDB catalog, so schema browsing and discovery work immediately — no cold-start crawl of the tenant.
 * 🌊 **Memory-Efficient Streaming.** Results flow through the proxy as they arrive from Oracle. The proxy itself doesn't buffer massive datasets in memory, keeping its resource footprint tiny.
 * 🧠 **Pagination Support.** Transparently handles `OFFSET`/`LIMIT`/`FETCH`. IDEs like DBeaver and DataGrip can fetch just the first page of results, avoiding massive full-table scans when you're just exploring data.
 * 🪄 **PostgreSQL → Oracle SQL Auto-Translation.** `TRUE/FALSE`, `ILIKE`, regex `~`, `date_trunc`, `EXCEPT`, `WITH RECURSIVE`, and more are translated automatically on the fly. [See the full matrix](doc/sql-compat.md).
