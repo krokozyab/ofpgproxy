@@ -53,7 +53,7 @@ FUSION_AUTH_TYPE=sso
 Pick which wire(s) to turn on — both can run from the same process:
 
 ```
-# Oracle SQL*Net (sqlplus, SQL Developer, SQLcl, dblink) — off by default, opt in:
+# Oracle SQL*Net (sqlplus, SQL Developer, SQLcl, dblink):
 OFPG_ORACLE_LISTEN=127.0.0.1:1521
 ORACLE_WIRE_PASSWORD=changeme   # YOU choose this value; required once OFPG_ORACLE_LISTEN is set
 
