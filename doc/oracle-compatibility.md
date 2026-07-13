@@ -22,21 +22,26 @@ backing it. "The code path exists" is never, by itself, treated as evidence.
 
 Any thin (pure-Java/pure-Python) client the proxy can't specifically identify
 as the ojdbc family below — chiefly **python-oracledb in thin mode**. Overall:
-**experimental**. Protocol versions 300–319.
+**verified**. Protocol versions 300–319.
 
 This profile is a catch-all for "thin, but not identified as the ojdbc
-family" — it is not a per-driver-verified claim specifically about
-python-oracledb; no CID PROGRAM or TTIPRO driver-name string for
-python-oracledb is recognized anywhere in this codebase.
+family" — no CID PROGRAM or TTIPRO driver-name string for python-oracledb is
+recognized anywhere in this codebase, so it's classified by elimination. Every
+feature below is verified specifically against a real **python-oracledb 4.0.1**
+thin-mode client (thin is the library's own default — no Instant Client
+involved) driven end to end against a live server instance; `auth.go`/
+`execute.go` have no per-driver branching for thin at all, so the same code
+serves any other thin client, but only python-oracledb has an actual capture
+backing it.
 
 | Feature | Grade | Notes |
 |---|---|---|
-| O5LOGON auth | experimental | Live-verification prose only, no dedicated auth test. |
-| EXECUTE/FETCH | experimental | No `fetch_test.go`; core marshaling has no dedicated regression test. |
-| Bind variables | **verified** | `bind_test.go:TestSubstituteBindParamsSQLDeveloperViewsTreeQuery`, `TestSubstituteBindParamsBasic`. |
-| NULL values | unknown | No dedicated NULL-cell-value test. |
-| Multi-row/multi-column | unknown | |
-| Wide results (>255 cols) | unknown | No row-piece-splitting logic exists for thin at all. |
+| O5LOGON auth | **verified** | `auth_test.go` — real AUTH_PHASE_ONE/TWO captures parsed, `deriveComboKey`/`checkPassword` run against a real client's session-key shape. |
+| EXECUTE/FETCH | **verified** | `fetch_test.go` — a real EXECUTE + follow-up FETCH round-trip, rebuilt responses match the capture byte-for-byte. |
+| Bind variables | **verified** | `bind_test.go` (string substitution) + `fetch_test.go` (the real wire-level bind decoder, a live `id=2` NUMBER bind). |
+| NULL values | **verified** | `fetch_test.go` — a real NULL cell (decoded by the client as `None`), byte-exact against the capture. |
+| Multi-row/multi-column | **verified** | `fetch_test.go` — 3 columns × 3 rows, split 2+1 across EXECUTE/FETCH (python-oracledb's default `prefetchrows=2`). Verified only up to this shape. |
+| Wide results (>255 cols) | **verified** | `wide_test.go` — a real 300-column, 1-row capture. The thin dialect has no OCI/dblink-style >255-column special case at all (DESCRIBE_INFO/ROW_DATA encode columns linearly over ordinary SDU-based Data-packet fragmentation), so this threshold doesn't apply to it. Verified for a single row only. |
 
 ## ojdbc / SQLcl / SQL Developer family (`thin-ojdbc-family`)
 
