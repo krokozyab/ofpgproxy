@@ -68,16 +68,30 @@ oracledb.connect(user="fusion", password="secret", dsn="127.0.0.1:1521/fusion")
 `fusion` is an arbitrary username, `secret` is your `--oracle-password`, and the
 service name after `/` is arbitrary.
 
-**Supported clients — thin AND thick drivers.** The Oracle-wire frontend
-supports both: **thin** (pure-Java / pure-Python) drivers — SQL Developer,
-SQLcl, ojdbc, DBeaver's Oracle driver, python-oracledb in thin mode — and
-**thick / OCI** clients built on a modern (23ai-era) Instant Client, including
-`sqlplus` itself and a real Oracle database's own `dblink` (see
+**Supported clients — thin AND thick drivers, each with its own verified
+scope.** The Oracle-wire frontend supports both: **thin** (pure-Java /
+pure-Python) drivers — SQL Developer, SQLcl, ojdbc, DBeaver's Oracle driver,
+python-oracledb in thin mode — and **thick / OCI** clients built on a modern
+(23ai-era) Instant Client, including `sqlplus` itself and a real Oracle
+database's own `dblink` (see
 [Oracle `dblink`](#oracle-dblink-a-real-oracle-database-as-the-client) below).
 Thick clients negotiate the Oracle Advanced Networking (ANO / Native Network
 Services) handshake that thin drivers skip; the proxy answers it with a
 "no native security" selection, which modern Instant Client versions accept
 transparently — no client-side configuration needed.
+
+Exactly how far each client/dialect is verified — down to specific types,
+bind variables, NULL handling, and column-count limits — is graded
+honestly (not aspirationally) in
+**[Oracle-wire client compatibility](oracle-compatibility.md)**, generated
+from the same registry `ofpgproxy doctor --profiles` reads. The short version:
+classic `sqlplus` and fast-auth (23ai) `sqlplus` are each verified only for a
+single-column/single-row response of specific scalar types (fast-auth has no
+DATE type at all); wide results (>255 columns) are verified only for the
+`dblink` dialect; bind variables and NULL handling are unverified for classic
+OCI and `dblink`. None of this is a rejection — an unverified path just isn't
+guaranteed, and `ofpgproxy doctor` will warn (never block) when a connection
+resolves to one.
 
 **Still unsupported:** actually *enabling* ANO's native encryption
 (`SQLNET.ENCRYPTION_CLIENT=REQUIRED`, TCPS in `sqlnet.ora`) — the proxy speaks
@@ -98,6 +112,14 @@ your `--oracle-password`, service name after `/` is arbitrary. Ordinary
 `SELECT`s, `DESCRIBE`, and `DBMS_OUTPUT`-free anonymous PL/SQL blocks that
 only run session no-ops (`ALTER SESSION`, `COMMIT`/`ROLLBACK`) work; any real
 write is rejected.
+
+Verified scope for a direct `sqlplus` session is narrower than "ordinary
+SELECTs" suggests: single-column/single-row responses of NUMBER/VARCHAR2/DATE
+for a pre-23ai client, or 9 scalar types + CLOB (no DATE) for a 23ai/26ai
+fast-auth client — see
+[Oracle-wire client compatibility](oracle-compatibility.md) for the exact,
+evidence-graded breakdown before relying on multi-column results, bind
+variables, or NULL handling in a script.
 
 ### Oracle `dblink` (a real Oracle database as the client)
 
@@ -122,6 +144,12 @@ Read-only, same as every other Oracle-wire client — any DML over the link is
 rejected. The proxy's own network reachability from wherever the real Oracle
 instance runs is on you (VPN, a reverse tunnel, or routing the two onto the
 same network) — the proxy doesn't do any of that itself.
+
+`dblink` is the one dialect verified for **wide results (>255 columns)** —
+confirmed against a real 288-column, all-NUMBER table capture. Bind variables
+and NULL cell values are unverified over `dblink`; see
+[Oracle-wire client compatibility](oracle-compatibility.md) for the full
+per-feature grading.
 
 ## psql
 

@@ -39,6 +39,7 @@ Oracle-wire frontend.
 | `orawire_protocol_timeouts_total` | counter | Protocol watchdog timeouts — a strict request/response transition (handshake, dblink round1→sync3→round2→fetch) the client never completed. See [Configuration → Protocol watchdog & diagnostics](configuration.md#protocol-watchdog--diagnostics). |
 | `orawire_diagnostic_bundles_total` | counter | Diagnostic `.zip` bundles written. |
 | `orawire_diagnostic_bundle_errors_total` | counter | Diagnostic bundle writes that failed (logged, never fatal). |
+| `orawire_compatibility_warnings_total` | counter | Connections whose resolved Oracle-wire compatibility profile is not fully verified (experimental/unsupported/unknown) — see [Oracle-wire client compatibility](oracle-compatibility.md). No driver-name/conn-ID labels; check connection logs or a diagnostic bundle's `compat_profile`/`compat_support` fields for which client. |
 
 Example scrape:
 

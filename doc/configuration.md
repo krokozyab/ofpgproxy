@@ -83,16 +83,53 @@ frontends run in one process and drain together on shutdown.
 Oracle clients log in with **any username** and the shared `--oracle-password`
 (the service name is ignored). See [Oracle clients](clients.md#oracle-clients-sql-developer-sqlcl-sqlplus) for the exact SQL Developer / SQLcl fields.
 
-**Thin and thick drivers both work.** Supported clients include the thin
-(pure-Java / pure-Python) Oracle drivers — SQL Developer, SQLcl, ojdbc,
-DBeaver's Oracle driver, python-oracledb (thin mode) — as well as thick / OCI
-clients built on a modern (23ai-era) Instant Client, including `sqlplus`
-itself and a real Oracle database's own `dblink`. Thick clients' Advanced
-Networking (ANO) handshake is answered with a "no native security" selection,
-which modern Instant Client accepts without any client-side configuration.
-The transport is plain unencrypted TCP TNS only — actually turning ON native
-encryption/TCPS (`SQLNET.ENCRYPTION_*`) is still out of scope; terminate TLS
-in front of the proxy instead if you need that. See [Oracle clients](clients.md#oracle-clients-sql-developer-sqlcl-sqlplus).
+**Thin and thick drivers both work, each with its own verified scope.**
+Supported clients include the thin (pure-Java / pure-Python) Oracle drivers —
+SQL Developer, SQLcl, ojdbc, DBeaver's Oracle driver, python-oracledb (thin
+mode) — as well as thick / OCI clients built on a modern (23ai-era) Instant
+Client, including `sqlplus` itself and a real Oracle database's own `dblink`.
+Thick clients' Advanced Networking (ANO) handshake is answered with a "no
+native security" selection, which modern Instant Client accepts without any
+client-side configuration. The transport is plain unencrypted TCP TNS only —
+actually turning ON native encryption/TCPS (`SQLNET.ENCRYPTION_*`) is still
+out of scope; terminate TLS in front of the proxy instead if you need that.
+
+"Both work" does not mean every client/dialect works identically — classic
+and fast-auth `sqlplus` are each verified only for specific scalar types in a
+single-column/single-row response, wide results (>255 columns) are verified
+only over `dblink`, and bind variables/NULL handling are unverified outside
+the thin ojdbc family. See
+[Oracle-wire client compatibility](oracle-compatibility.md) for the exact,
+evidence-graded breakdown, and [Oracle clients](clients.md#oracle-clients-sql-developer-sqlcl-sqlplus)
+for connection strings. `ofpgproxy doctor` reports which profile a real
+connection resolves to and warns (never blocks) on an unverified one.
+
+## `ofpgproxy doctor`
+
+`ofpgproxy doctor` validates a concrete installation — config, `metadata.db`,
+and Fusion reachability — before you ever point a real client at it. It
+reuses the exact same flags/env vars as the server itself, and never starts a
+PG-wire or Oracle-wire listener.
+
+```bash
+./ofpgproxy doctor --offline                 # config + metadata.db only, zero network calls
+./ofpgproxy doctor --offline --format json   # same, machine-readable
+./ofpgproxy doctor --profiles                # print the Oracle-wire compatibility registry, zero Fusion calls
+./ofpgproxy doctor --deep --timeout 2m       # add bounded multi-type + wide-column Fusion probes
+```
+
+Without `--offline`, `doctor` also runs a real, bounded `SELECT 1 FROM DUAL`
+through the same auth/backend path the server uses — including opening a
+browser for `--auth=sso` if that's your configured mode. `--deep` adds one
+multi-type literal probe and one wide-column (300-column) probe, both
+`SELECT ... FROM DUAL` only — no tenant table or column names are ever
+touched. `--require-online` turns a skipped online check (e.g. Fusion
+unreachable) into a failure instead of a pass-with-warnings.
+
+Each of the 14 checks reports `pass`/`warn`/`fail`/`skip`; exit code is `0`
+with no failures, `1` with at least one, `2` for a bad flag or setup error.
+`oracle.compatibility` summarizes the same registry `--profiles` prints in
+full — see [Oracle-wire client compatibility](oracle-compatibility.md).
 
 ## Observability
 

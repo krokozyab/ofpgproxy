@@ -2,13 +2,27 @@
 
 When something unexpected comes back from the proxy, check here before chasing into logs.
 
+**Run `ofpgproxy doctor` first.** Before digging into any of the sections
+below, `ofpgproxy doctor` (offline by default with `--offline`, or a live
+`SELECT 1 FROM DUAL` check without it) validates config, metadata.db, and
+Fusion reachability using the exact same code path the server uses — often
+narrowing "something's wrong" down to one specific check in seconds.
+`ofpgproxy doctor --profiles` additionally prints exactly which Oracle-wire
+client/dialect/feature combinations this build has verified support for (see
+[Oracle-wire client compatibility](oracle-compatibility.md)), and a real
+connection's diagnostic bundle/logs report which profile it resolved to via
+`compat_profile`/`compat_support`.
+
 ## `sqlplus` / OCI (thick / Instant Client) connection problems
 
 `sqlplus` and other OCI "thick" clients (including a real Oracle database's
-own `dblink`) are supported against a **modern (23ai-era) Instant Client** —
-see [Oracle clients → sqlplus](clients.md#sqlplus) and [Oracle
-`dblink`](clients.md#oracle-dblink-a-real-oracle-database-as-the-client). If
-one still won't connect:
+own `dblink`) are supported against a **modern (23ai-era) Instant Client**,
+each verified only for a specific, narrower-than-"fully supported" scope —
+see [Oracle clients → sqlplus](clients.md#sqlplus), [Oracle
+`dblink`](clients.md#oracle-dblink-a-real-oracle-database-as-the-client), and
+the full breakdown in
+[Oracle-wire client compatibility](oracle-compatibility.md). If one still
+won't connect:
 
 - `ORA-12537: TNS:connection closed` / `ORA-12541: TNS:no listener`-class
   errors, or a login that hangs then drops right after the data-type
