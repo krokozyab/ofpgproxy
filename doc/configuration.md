@@ -17,6 +17,9 @@ Flags always win over environment variables. A few parameters are available only
 | `--oracle-listen` | `OFPG_ORACLE_LISTEN` | off | `host:port` for a second, read-only **Oracle-wire (TNS/TTC)** listener so Oracle clients (SQLcl, python-oracledb, ojdbc) connect too. Shares the SOAP backend + metadata catalog. See [Oracle-wire frontend](#oracle-wire-frontend). |
 | `--oracle-password` | `ORACLE_WIRE_PASSWORD` | — | Shared password the Oracle-wire O5LOGON handshake accepts (any username). **Required** with `--oracle-listen`. |
 | `--metrics-listen` | `OFPG_METRICS_LISTEN` | off | `host:port` for the ops HTTP server: Prometheus `/metrics` + `/healthz` + `/readyz`. Requires `--oracle-listen`. No auth — bind to loopback. See [Observability](observability.md). |
+| `--oracle-protocol-timeout` | `OFPG_ORACLE_PROTOCOL_TIMEOUT` | `30s` | Protocol watchdog timeout for the Oracle-wire frontend, `time.Duration` syntax. `0` disables it. See [Protocol watchdog & diagnostics](#protocol-watchdog--diagnostics). |
+| `--oracle-diagnostic-dir` | `OFPG_ORACLE_DIAGNOSTIC_DIR` | off | Directory to write bounded diagnostic `.zip` bundles on a protocol timeout, panic, malformed message, or unsupported transition. Empty disables bundle writing (timeout logging still always happens). |
+| `--oracle-diagnostic-raw` | `OFPG_ORACLE_DIAGNOSTIC_RAW` | `false` | Include bounded (256 KiB/direction) raw wire byte tails in diagnostic bundles. Off by default — raw bytes may include query result values. |
 
 ### Backend
 
@@ -177,6 +180,72 @@ buffered) only retry a failure that happens **before any row reached the
 client** — once even one row has streamed out, a retry is skipped even for an
 otherwise-retryable error, since resending the whole SOAP call would
 redeliver rows the client already has.
+
+## Protocol watchdog & diagnostics
+
+The Oracle-wire frontend (`--oracle-listen`) tracks an explicit protocol
+state per connection and can time out a connection that's stuck waiting on a
+**strict, already-obligated** request/response step — most notably a real
+Oracle database's own `dblink` shadow session that stalls right after the
+session-sync `0x44` exchange, never sending the round-2 `EXECUTE` it's
+supposed to.
+
+**What counts as "strict"** (armed by `--oracle-protocol-timeout`, default
+`30s`): every handshake stage (Connect, TTIPRO, TTIDTY, AUTH_PHASE_ONE/TWO),
+and dblink's own round1 → session-sync(`0x44`) → round2 `EXECUTE` →
+FETCH/repeat-EXECUTE chain.
+
+**What is never timed out, no matter how long it sits idle:** an ordinary
+authenticated interactive session (SQL Developer, SQLcl, `sqlplus` sitting
+between statements) — the client hasn't been handed any specific obligation
+to respond to, so there's nothing to time out. Waiting on the Fusion/BI
+Publisher backend is also never subject to this timeout; that has its own,
+separate timeout, and a client's BREAK/Ctrl-C still cancels an in-flight
+backend call normally regardless of this setting.
+
+Set `0` to disable the watchdog entirely.
+
+```bash
+./ofpgproxy --oracle-listen 127.0.0.1:1521 --oracle-password secret \
+  --oracle-protocol-timeout 15s
+```
+
+### Diagnostic bundles
+
+When a connection is dropped for a genuine protocol reason — a watchdog
+timeout, a recovered panic, a malformed message, or an unsupported protocol
+transition — the proxy can write a small, self-contained `.zip` bundle to
+`--oracle-diagnostic-dir` (off by default; timeout logging happens either
+way). A bundle contains:
+
+- `summary.json` — connection id, remote address, dialect, protocol state,
+  what was expected next, the trigger, build version, and (for a SQL-bearing
+  state) the query's length and a SHA-256 fingerprint — **never the SQL text
+  itself, and never row values or credentials**.
+- `events.jsonl` — a bounded (≤200 entries) rolling log of recent
+  packet-level events for that connection.
+- `c2s.tail.bin` / `s2c.tail.bin` — **only** when `--oracle-diagnostic-raw`
+  is also set: the last 256 KiB of raw wire bytes in each direction. Off by
+  default because raw bytes may contain query result values — only enable
+  this temporarily, while actively reproducing an issue.
+
+No bundle is written for a clean `LOGOFF`, a normal shutdown, an ordinary
+client disconnect, or a backend query error already returned to the client
+as a proper `ORA-…` response — only genuine protocol-diagnostic events
+produce one. A failed bundle write is only logged (and counted in
+`orawire_diagnostic_bundle_errors_total`) — it never affects the connection's
+own error handling.
+
+```bash
+mkdir -p /var/log/ofpgproxy/diagnostics
+./ofpgproxy --oracle-listen 127.0.0.1:1521 --oracle-password secret \
+  --oracle-diagnostic-dir /var/log/ofpgproxy/diagnostics
+```
+
+**Attaching a bundle to a bug report:** find the newest
+`orawire-<timestamp>-conn-<id>-<trigger>.zip` in the diagnostic directory
+matching the log line's own `diagnostic_bundle=` path, and attach it as-is —
+see [Troubleshooting](troubleshooting.md) for the matching log line shape.
 
 ## SQL Translator playground
 

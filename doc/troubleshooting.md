@@ -177,6 +177,36 @@ That makes `postgres_scanner` issue regular `SELECT` queries (which the proxy fu
 
 Inside a container, `127.0.0.1` is the container itself, not the host. Use `host.docker.internal` (macOS / Windows Docker Desktop) or the host's LAN IP (Linux Docker).
 
+### An Oracle-wire connection (especially `dblink`) just hangs
+
+Most commonly a real Oracle database's own `dblink` shadow session stalling
+right after the session-sync (`0x44`) exchange — the client silently never
+sends the round-2 `EXECUTE` it's protocol-obligated to send next, and
+without the watchdog the connection would sit open forever with no trace of
+what happened.
+
+By default (`--oracle-protocol-timeout 30s`), this now surfaces as one
+structured warning instead of a silent hang:
+
+```
+orawire: protocol watchdog timeout conn_id=42 remote=... dialect=dblink
+  state=dblink.await_execute_round2 expected="OCI EXECUTE round 2"
+  elapsed=30s describe_columns=262 diagnostic_bundle=/.../orawire-...zip
+```
+
+The connection is closed; every *other* connection on the proxy keeps
+running unaffected. `state`/`expected` say exactly which step the client
+never completed — see [Configuration → Protocol watchdog &
+diagnostics](configuration.md#protocol-watchdog--diagnostics) for the full
+list of strict states this can fire on (only handshake steps and dblink's
+own round1→sync3→round2→fetch chain — never an ordinary idle interactive
+session).
+
+If you hit this against a live dblink session, turn on
+`--oracle-diagnostic-dir` (and, only while actively reproducing, add
+`--oracle-diagnostic-raw`) so the next occurrence produces an attachable
+bundle instead of just a log line — see the next section.
+
 ## How to read the log
 
 With `--log-queries=true` (default) each incoming statement produces one line like:
@@ -203,3 +233,9 @@ Capture:
 3. A single-row sample of the offending table (`SELECT * FROM …_ LIMIT 1`) — types + values often pinpoint the issue.
 
 That triple identifies almost every reproducible case in minutes.
+
+For an Oracle-wire hang/timeout specifically, also grab the `orawire:
+protocol watchdog timeout` log line itself (it names the exact state/expected
+step) and, if `--oracle-diagnostic-dir` was set, the matching
+`orawire-<timestamp>-conn-<id>-<trigger>.zip` bundle — attach it as-is, no
+need to unzip or extract anything from it first.

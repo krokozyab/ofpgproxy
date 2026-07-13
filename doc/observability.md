@@ -36,6 +36,9 @@ Oracle-wire frontend.
 | `orawire_query_errors_total` | counter | Executions that returned an error (e.g. ORA-00942). |
 | `orawire_interrupts_total` | counter | Calls aborted by a client break/interrupt (Ctrl-C, call timeout). |
 | `orawire_soap_duration_seconds` | histogram | BI Publisher call latency. Buckets 0.05 s → 30 s (the backend is slow); `_sum` and `_count` included. |
+| `orawire_protocol_timeouts_total` | counter | Protocol watchdog timeouts — a strict request/response transition (handshake, dblink round1→sync3→round2→fetch) the client never completed. See [Configuration → Protocol watchdog & diagnostics](configuration.md#protocol-watchdog--diagnostics). |
+| `orawire_diagnostic_bundles_total` | counter | Diagnostic `.zip` bundles written. |
+| `orawire_diagnostic_bundle_errors_total` | counter | Diagnostic bundle writes that failed (logged, never fatal). |
 
 Example scrape:
 
