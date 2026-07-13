@@ -1,7 +1,7 @@
 <div align="center">
   <h1>✨ ofpgproxy</h1>
-  <p><strong>Talk to Oracle Fusion Cloud in native Oracle SQL*Net — <code>sqlplus</code>, SQL Developer, SQLcl, ojdbc, even a real Oracle database's own <code>dblink</code> — no rewrite, no OIC, no custom integration.</strong></p>
-  <p>PostgreSQL wire protocol comes along for the ride too, so Metabase, Superset, Grafana, dbt, and DBeaver connect just as natively — same binary, same tenant, your pick of wire.</p>
+  <p><strong>Talk to Oracle Fusion Cloud in native Oracle SQL*Net — <code>sqlplus</code>, SQL Developer, SQLcl, ojdbc, even a real Oracle database's own <code>dblink</code>.</strong></p>
+  <p>PostgreSQL wire protocol comes along for the ride too — Metabase, Superset, Grafana, dbt, and DBeaver connect just as natively. Same binary, same tenant, your pick of wire.</p>
 
   <br />
 
