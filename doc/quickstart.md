@@ -46,7 +46,24 @@ FUSION_AUTH_TYPE=sso
 
 Full reference: [Configuration](configuration.md) · [Authentication](auth.md)
 
-## 4. Launch
+## 4. (Optional) Validate before launching
+
+`./ofpgproxy doctor` checks your `.env`/`--metadata-path` config, opens
+`metadata.db`, and — unless you pass `--offline` — runs one real, bounded
+`SELECT 1 FROM DUAL` through Fusion, all without starting the proxy itself.
+Same env vars and flags as step 5 below:
+
+```bash
+set -a; source .env; set +a
+./ofpgproxy doctor --offline --metadata-path ./metadata.db
+```
+
+A clean run prints `Result: PASS` (warnings are fine — they flag unverified
+Oracle-wire client combinations, not broken config). See
+[Configuration → `ofpgproxy doctor`](configuration.md#ofpgproxy-doctor) for
+every flag and what each of its 14 checks does.
+
+## 5. Launch
 
 ### macOS / Linux (incl. WSL)
 
@@ -76,7 +93,7 @@ time=... level=INFO msg="ofpgproxy listening on 127.0.0.1:5433"
 
 On first SSO run the Chrome window points at your IdP — log in as you normally would. The captured token is held in-process until the proxy exits.
 
-## 5. Run your first query
+## 6. Run your first query
 
 ### psql
 

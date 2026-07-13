@@ -103,9 +103,19 @@ connection resolves to and warns (never blocks) on an unverified one; run
 ## `ofpgproxy doctor`
 
 `ofpgproxy doctor` validates a concrete installation — config, `metadata.db`,
-and Fusion reachability — before you ever point a real client at it. It
-reuses the exact same flags/env vars as the server itself, and never starts a
+and Fusion reachability — before you ever point a real client at it. It's the
+same `ofpgproxy` binary with `doctor` as its **first** argument; every other
+flag and env var (`FUSION_HOST`, `FUSION_AUTH_TYPE`, `--metadata-path`, ...)
+is identical to the server's own — nothing doctor-specific to set up beyond
+whatever you'd already pass to run the proxy itself. It never starts a
 PG-wire or Oracle-wire listener.
+
+```bash
+# Same env vars and --metadata-path you'd use to actually run the proxy
+# (see the Quick Start above) — doctor reads them exactly the same way.
+FUSION_HOST=fa-xxxx.oraclecloud.com FUSION_AUTH_TYPE=sso \
+  ./ofpgproxy doctor --offline --metadata-path ./metadata.db
+```
 
 ```bash
 ./ofpgproxy doctor --offline                 # config + metadata.db only, zero network calls
