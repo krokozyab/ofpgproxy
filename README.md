@@ -64,7 +64,7 @@ Works natively with: **SQL Clients** (DBeaver, DataGrip, TablePlus, pgAdmin, `ps
 ## 💡 Why you need this
 
 * **Reuse the Oracle stack you already have:** reconcile an EBS (or any Oracle) database against Fusion straight over its own `dblink`, pull Fusion data into OIC flows and existing PL/SQL, run your `sqlplus` scripts and SQL Developer habits — all unchanged. Cut out the staging tables, nightly exports, and throwaway integrations you'd otherwise build just to move the data around.
-* **Stop fighting the BI bottleneck:** Plug Metabase, Superset, or Power BI directly into Fusion over Postgres wire. No more waiting weeks for a custom data pipeline just to see a basic chart.
+* **Stop fighting the BI bottleneck:** Plug Metabase, Superset, or Power BI straight into Fusion — on whichever wire your BI tool speaks, Oracle or Postgres. No more waiting weeks for a custom data pipeline just to see a basic chart.
 * **Keep the tools you already know:** every Oracle client you own — SQL Developer, DBeaver, SQLcl, an ojdbc service — connects natively, tree navigation, autocomplete, and result grids intact. Nothing new to learn.
 
 ## 🚀 60-Second Magic Start
@@ -128,3 +128,13 @@ Everything that speaks either wire just connects: `sqlplus`, SQL Developer, SQLc
 **Your tools never find out it isn't a real database.**
 
 *Actively developed. Expect rough edges on exotic SQL shapes and unverified client/dialect combinations — `ofpgproxy doctor --profiles` shows exactly what's covered today, and [SQL compatibility](doc/sql-compat.md) has the current PG→Oracle matrix. Open an issue when you hit one.*
+
+## ⚖️ Independence & trademarks
+
+`ofpgproxy` is an independent, third-party tool. It is **not affiliated with, endorsed by, sponsored by, or supported by Oracle Corporation.**
+
+"Oracle", "Oracle Fusion Cloud", "SQL\*Net", "SQL Developer", and "SQLcl" are trademarks or registered trademarks of Oracle and/or its affiliates. They are used here only descriptively — to state what `ofpgproxy` interoperates with — and no affiliation or endorsement is implied.
+
+`ofpgproxy` reads your tenant **only through Oracle's own documented BI Publisher web service** — the interface Oracle provides for this — authenticating with credentials **you** supply. It bundles no Oracle software and copies no Oracle source code; the Oracle SQL\*Net (TNS/TTC) and PostgreSQL wire endpoints are an independent implementation whose sole purpose is protocol interoperability.
+
+You are responsible for using `ofpgproxy` in accordance with your own Oracle Cloud subscription terms, license agreements, and applicable law. Nothing here is legal advice — if you have doubts, talk to your own counsel.
