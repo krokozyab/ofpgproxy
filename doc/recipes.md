@@ -213,5 +213,5 @@ If the output shows `127.0.0.1:5433`, restart with `--listen 0.0.0.0:5433` (or `
 ## Notes
 
 - `COUNT(*)` without `AS alias` returns an empty value — BI Publisher can't render a column whose Oracle name contains `(*)` into an XML tag. Always alias: `COUNT(*) AS n`. Same for `SUM(expr)`, `MAX(expr)` when used bare.
-- Both `dblink` and `postgres_fdw` use the proxy's read-only path — no `INSERT` / `UPDATE` / `DELETE` ever reaches Fusion (BIP can't write). `postgres_fdw` (PG wire) surfaces a rejected write as `42501 permission_denied`. Keep writes targeting a real downstream database, not the link.
+- Both `dblink` and `postgres_fdw` use the proxy's read-only path — no `INSERT` / `UPDATE` / `DELETE` ever reaches Fusion (BIP can't write). A rejected write surfaces as `42501 permission_denied` over `postgres_fdw` (PG wire), or as `ORA-16000` (wrapped in the client's own `ORA-02063: preceding line from <LINK>`) over Oracle `dblink`. Keep writes targeting a real downstream database, not the link.
 - For bigger extracts consider caching with CTAS into a real PG/DuckDB table (step 7 in DuckDB, step 5 in `dblink`). Fusion is slow on the BIP side — amortize the cost.
