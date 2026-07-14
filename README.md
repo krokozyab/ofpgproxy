@@ -63,9 +63,9 @@ Works natively with: **SQL Clients** (DBeaver, DataGrip, TablePlus, pgAdmin, `ps
 
 ## 💡 Why you need this
 
-* **Reuse the Oracle stack you already have:** `dblink`-based reconciliation, `sqlplus` scripts, SQL Developer habits — none of it needs to be rewritten for Fusion.
+* **Reuse the Oracle stack you already have:** reconcile an EBS (or any Oracle) database against Fusion straight over its own `dblink`, pull Fusion data into OIC flows and existing PL/SQL, run your `sqlplus` scripts and SQL Developer habits — all unchanged. Cut out the staging tables, nightly exports, and throwaway integrations you'd otherwise build just to move the data around.
 * **Stop fighting the BI bottleneck:** Plug Metabase, Superset, or Power BI directly into Fusion over Postgres wire. No more waiting weeks for a custom data pipeline just to see a basic chart.
-* **Give analysts their tooling back:** DBeaver tree navigation, autocomplete, query history, and result grids all work natively, on either wire.
+* **Keep the tools you already know:** every Oracle client you own — SQL Developer, DBeaver, SQLcl, an ojdbc service — connects natively, tree navigation, autocomplete, and result grids intact. Nothing new to learn.
 
 ## 🚀 60-Second Magic Start
 
@@ -100,9 +100,7 @@ psql -h localhost -p 5433 -U anyone -d any \
 * 🔶 **Native Oracle SQL*Net (TNS/TTC).** `sqlplus`, SQL Developer, SQLcl, ojdbc, and a real Oracle database's own `dblink` connect over the real wire bytes — a from-scratch protocol implementation, not an emulation layer bolted onto a driver.
 * 📚 **Metadata Pre-Indexed.** Ships with a lightning-fast DuckDB catalog, so schema browsing and discovery work immediately — no cold-start crawl of the tenant.
 * 🌊 **Memory-Efficient Streaming.** Results flow through the proxy as they arrive from Oracle. The proxy itself doesn't buffer massive datasets in memory, keeping its resource footprint tiny.
-* 🧠 **Pagination Support.** Transparently handles `OFFSET`/`LIMIT`/`FETCH`. IDEs like DBeaver and DataGrip can fetch just the first page of results, avoiding massive full-table scans when you're just exploring data.
 * 🪄 **PostgreSQL → Oracle SQL Auto-Translation.** `TRUE/FALSE`, `ILIKE`, regex `~`, `date_trunc`, `EXCEPT`, `WITH RECURSIVE`, and more are translated automatically on the fly. [See the full matrix](doc/sql-compat.md).
-* 🛡️ **Real Protocol-Native Errors.** `ORA-00942` reaches an Oracle client unchanged, and becomes SQLSTATE `42P01 undefined_table` for a Postgres one. Your tools react exactly as they should either way.
 * 🔒 **Read-Only by Design.** BI Publisher can't write, and neither will the proxy. No accidental DML, on any wire. Sleep soundly.
 * 🩺 **Built-in `doctor`.** `ofpgproxy doctor` validates config, `metadata.db`, and Fusion reachability — and reports exactly which Oracle client/dialect combinations this build has verified — before you ever point a real client at it. [Details](doc/configuration.md#ofpgproxy-doctor).
 * 🧪 **Built-in Translator Playground.** Launch with `--translate-http 127.0.0.1:8080` to get an offline web UI (and JSON endpoint) that shows, for any SQL you paste, which router branch it hits and the rewritten Oracle / DuckDB statement — no Fusion connection needed. [Details](doc/configuration.md#sql-translator-playground).
