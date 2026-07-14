@@ -28,18 +28,18 @@ Oracle Fusion Cloud's BI Publisher is the only sanctioned read-path out of a Saa
 
 ```text
    Oracle clients                     SQL / BI / Data tools
- (sqlplus, SQL Developer,           (psql, DBeaver, Metabase,
-  SQLcl, dblink, ojdbc)                Superset, DuckDB, dbt)
+ (sqlplus, SQL Developer,            (psql, DBeaver, Metabase,
+  SQLcl, dblink, ojdbc)               Superset, DuckDB, dbt)
          │                                     │
-         │  🔶 Oracle SQL*Net (TNS/TTC)        │  ✨ PostgreSQL wire protocol
+         │  Oracle SQL*Net (TNS/TTC)           │  PostgreSQL wire protocol
          ▼                                     ▼
-                     ┌───────────────┐
-                     │   ofpgproxy   │
-                     └───────────────┘
-                             │
-                             │   ⚡️ SOAP (BI Publisher · RP_ARB.xdo)
-                             ▼
-                    Oracle Fusion Cloud tenant
+                    ┌───────────────┐
+                    │   ofpgproxy   │
+                    └───────────────┘
+                            │
+                            │  SOAP (BI Publisher · RP_ARB.xdo)
+                            ▼
+                   Oracle Fusion Cloud tenant
 ```
 
 ### 🎯 Native Oracle, no rewrite required

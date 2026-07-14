@@ -321,14 +321,13 @@ FROM dblink(
 );
 ```
 
-## Metabase / Superset / Grafana
+## Metabase / Superset
 
 Add as a **PostgreSQL** data source (not Oracle, not generic JDBC).
 
 - **Host** `localhost`, **Port** `5433`, **Database** `any`, **Username** `anyone`.
 - SSL: disabled (until you put a TLS terminator in front).
 - Metabase: let it sync the schema — the proxy serves `information_schema.*` from the catalog, so all tables show up. Re-sync after you refresh `metadata.db`.
-- Grafana: PostgreSQL data source, enable "Min time interval" to avoid sub-second queries hammering BIP.
 - Superset: expose per-module schemas in the database connection UI for cleaner dataset pickers.
 
 ## Code clients
@@ -392,7 +391,7 @@ fusion:
 
 | Client kind | Behaviour | How to change |
 |---|---|---|
-| IDE clients (DBeaver, DataGrip, JetBrains IDEs, pgAdmin, Metabase, Superset, Grafana, Tableau, Looker, Navicat, TablePlus, Postico, Redash, Power BI) | OFFSET/FETCH batching — first page fast, more pages on scroll | `--foreign-batch-size N` (0 disables) |
+| IDE clients (DBeaver, DataGrip, JetBrains IDEs, pgAdmin, Metabase, Superset, Tableau, Looker, Navicat, TablePlus, Postico, Redash, Power BI) | OFFSET/FETCH batching — first page fast, more pages on scroll | `--foreign-batch-size N` (0 disables) |
 | Code clients (pgx, psycopg, psql, pgJDBC without IDE prefix) | Single SOAP call for the whole result | Add `LIMIT` in the query |
 
 Detection is by the `application_name` sent in the PG startup packet, with live updates from `SET application_name = '…'` (pgJDBC connects as "PostgreSQL JDBC Driver", then DBeaver renames to "DBeaver 26.x — …" — we honour the rename).
