@@ -9,7 +9,7 @@ at once.
 - macOS (Apple Silicon), Windows (x86_64), or Linux (x86_64).
 - Chrome / Chromium on `PATH` (only needed for SSO auth mode).
 - A Fusion Cloud tenant with the `RP_ARB.xdo` BI Publisher report deployed (download from [krokozyab/ofjdbc/otbireport](https://github.com/krokozyab/ofjdbc/tree/master/otbireport)) — typically under `/Custom/sql/RP_ARB.xdo` or `/Custom/Financials/RP_ARB.xdo`.
-- At least one client: an Oracle client (`sqlplus`, SQL Developer, SQLcl) and/or a PG-wire client (`psql`, DBeaver) — see the [full client recipes](clients.md) either way.
+- At least one client: an Oracle client and/or a PG-wire client (`psql`, DBeaver) — see the [full client recipes](clients.md) either way. For Oracle, **SQLcl** is the easiest to get (a single download, needs only a Java runtime); `sqlplus` and SQL Developer need a full Oracle Instant Client install separately.
 
 ## 2. Get the artefacts
 
@@ -55,11 +55,10 @@ Pick which wire(s) to turn on — both can run from the same process:
 ```
 # Oracle SQL*Net (sqlplus, SQL Developer, SQLcl, dblink):
 OFPG_ORACLE_LISTEN=127.0.0.1:1521
-ORACLE_WIRE_PASSWORD=changeme   # YOU choose this value; required once OFPG_ORACLE_LISTEN is set
+ORACLE_WIRE_PASSWORD=changeme   # YOU choose this value — every Oracle client logs in with it; required once OFPG_ORACLE_LISTEN is set
 
-# PostgreSQL wire (psql, DBeaver, Metabase, dbt, ...) — on by default at 127.0.0.1:5433,
-# override only if you need a different address:
-# OFPG_LISTEN=127.0.0.1:5433
+# PostgreSQL wire (psql, DBeaver, Metabase, dbt, ...):
+# OFPG_LISTEN=127.0.0.1:5433   # this is already the default; only set it to override
 ```
 
 Full reference: [Configuration](configuration.md) (every flag/env var, including `OFPG_METRICS_LISTEN` and SOAP concurrency/retry tuning) · [Authentication](auth.md) (all six modes)
@@ -114,10 +113,14 @@ On first SSO run the Chrome window points at your IdP — log in as you normally
 
 ## 6. Run your first query
 
-### sqlplus / SQL Developer / SQLcl
+### SQLcl
+
+The quickest Oracle client to get — a single download, no separate Instant
+Client install needed (it bundles its own JDBC driver; only a Java runtime is
+required):
 
 ```bash
-sqlplus fusion/changeme@//127.0.0.1:1521/fusion
+sql FUSION/changeme@//127.0.0.1:1521/fusion
 ```
 
 ```sql
@@ -127,11 +130,21 @@ WHERE  period_year = 2024
 AND    ROWNUM <= 5;
 ```
 
-`fusion` is an arbitrary username — use `FUSION` (uppercase) specifically if
-you also want `DESCRIBE`/catalog tree browsing to line up with the single
-logical schema every object is reported under. `changeme` is whatever you set
-`ORACLE_WIRE_PASSWORD` to. See [Connecting Oracle clients](clients.md#oracle-clients-sql-developer-sqlcl-sqlplus)
-for SQL Developer/SQLcl connection fields and `dblink` setup.
+The three parts of that connect string:
+
+- **`FUSION`** — the username. Any username authenticates (access control is
+  the Fusion session the proxy holds underneath), but use `FUSION` (uppercase)
+  as your habit: IDE catalog browsing (`DESCRIBE`, SQL Developer / DBeaver
+  tree) only lines up when the connected username matches the single logical
+  schema `FUSION` that every object is reported under.
+- **`changeme`** — the password: **exactly what you set `ORACLE_WIRE_PASSWORD`
+  to** in `.env` (step 3). A wrong value is rejected at login.
+- **`fusion`** after the `/` — the service name; any value works, it is ignored.
+
+`sqlplus` and SQL Developer connect the same way once you've installed a full
+Oracle Instant Client (a separate download from Oracle, not bundled with
+either tool) — see [Connecting Oracle clients](clients.md#oracle-clients-sql-developer-sqlcl-sqlplus)
+for those connection fields and `dblink` setup.
 
 ### psql
 
@@ -146,16 +159,42 @@ WHERE  period_year = 2024
 LIMIT  5;
 ```
 
-Username and database are placeholders — the proxy accepts any values.
+Username and database are placeholders — the PG wire accepts any values and
+never asks for a password. (Only the Oracle wire above validates its
+password; the two wires' credential rules are different.)
 
 ### DBeaver
 
-1. New Connection → PostgreSQL (built-in driver) — or Oracle, pointed at `--oracle-listen`'s port.
-2. For PostgreSQL: Host `127.0.0.1`, Port `5433`, Database `any`, User / Password any.
-3. **Driver properties** → `preferQueryMode` = `simple`. (Optional but avoids binary-format parameter edge cases.)
-4. Test connection, finish.
-5. Schema tree: tables appear under `public` (or per-module schemas — `fscm`, `hcm`, `crm` — when the module is present in `metadata.db`).
-6. Double-click any table → rows stream into the result grid.
+Works over either wire — pick one. The credentials differ between the two, so
+double-check which driver you selected:
+
+**Over the PostgreSQL wire** (simplest):
+
+1. New Connection → **PostgreSQL** (built-in driver).
+2. Host `127.0.0.1`, Port `5433`, Database `any`, User / Password — any values
+   (the PG wire doesn't validate them).
+3. **Driver properties** → `preferQueryMode` = `simple`. (Optional but avoids
+   binary-format parameter edge cases.)
+4. Test connection, finish. Tables appear under `public` (or per-module
+   schemas — `fscm`, `hcm`, `crm` — when the module is present in `metadata.db`).
+
+**Over the Oracle wire:**
+
+1. New Connection → **Oracle**.
+2. Host `127.0.0.1`, Port `1521` (your `OFPG_ORACLE_LISTEN` port),
+   **Service name** `fusion` (any value works — just pick Service name, not SID).
+3. Username **`FUSION`** — uppercase. Any username authenticates, but only
+   `FUSION` makes the Tables/Views tree populate: the tree filters by
+   `OWNER = <your username>` client-side, and every object the proxy reports
+   is owned by the single logical schema `FUSION`.
+4. Password — **your `ORACLE_WIRE_PASSWORD` value** from `.env` (`changeme` in
+   the example above). Unlike the PG wire, the Oracle wire rejects a wrong
+   password.
+5. Test connection, finish. Tables appear under the `FUSION` schema.
+
+Either way: double-click any table → rows stream into the result grid. The
+same two credential rules apply to any other Oracle-driver tool (DataGrip,
+SQL Developer, custom JDBC) — see [Connecting clients](clients.md).
 
 ### Other clients
 

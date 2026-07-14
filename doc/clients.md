@@ -57,16 +57,17 @@ Username note above, not a bug to report.
 ### SQLcl / python-oracledb
 
 ```bash
-sql fusion/secret@127.0.0.1:1521/fusion
+sql FUSION/secret@127.0.0.1:1521/fusion
 ```
 
 ```python
 import oracledb
-oracledb.connect(user="fusion", password="secret", dsn="127.0.0.1:1521/fusion")
+oracledb.connect(user="FUSION", password="secret", dsn="127.0.0.1:1521/fusion")
 ```
 
-`fusion` is an arbitrary username, `secret` is your `--oracle-password`, and the
-service name after `/` is arbitrary.
+`FUSION` is the recommended username (any value authenticates — see the
+Username note above), `secret` stands for **your** `--oracle-password` /
+`ORACLE_WIRE_PASSWORD` value, and the service name after `/` is arbitrary.
 
 **Supported clients — thin AND thick drivers, each with its own verified
 scope.** The Oracle-wire frontend supports both: **thin** (pure-Java /
@@ -97,13 +98,14 @@ TLS in front of the proxy instead (stunnel, a cloud load balancer, etc.).
 ### sqlplus
 
 ```bash
-sqlplus fusion/secret@//127.0.0.1:1521/fusion
+sqlplus FUSION/secret@//127.0.0.1:1521/fusion
 ```
 
-Same credentials as SQLcl above — `fusion` is an arbitrary username (use
-`FUSION` if you also want the `DESCRIBE`/`SHOW` catalog commands to line up
-with the single logical schema every object is reported under), `secret` is
-your `--oracle-password`, service name after `/` is arbitrary. Ordinary
+Same credentials as SQLcl above — `FUSION` is the recommended username (any
+value authenticates, but `DESCRIBE`/`SHOW` catalog commands only line up with
+the single logical schema every object is reported under when you connect as
+`FUSION`), `secret` stands for your `--oracle-password` /
+`ORACLE_WIRE_PASSWORD` value, service name after `/` is arbitrary. Ordinary
 `SELECT`s, `DESCRIBE`, and `DBMS_OUTPUT`-free anonymous PL/SQL blocks that
 only run session no-ops (`ALTER SESSION`, `COMMIT`/`ROLLBACK`) work; any real
 write is rejected.
@@ -123,7 +125,7 @@ report per query:
 
 ```sql
 CREATE DATABASE LINK fusion_link
-  CONNECT TO fusion IDENTIFIED BY secret
+  CONNECT TO FUSION IDENTIFIED BY secret
   USING '(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=<proxy-host>)(PORT=1521))
           (CONNECT_DATA=(SERVICE_NAME=fusion)))';
 
@@ -131,6 +133,10 @@ SELECT je_header_id, accounted_dr
 FROM   gl_je_lines@fusion_link
 WHERE  ROWNUM <= 5;
 ```
+
+Same credential rules as above: `IDENTIFIED BY secret` must be **your**
+`--oracle-password` / `ORACLE_WIRE_PASSWORD` value; the `CONNECT TO` username
+is not validated.
 
 Read-only, same as every other Oracle-wire client — any DML over the link is
 rejected. The proxy's own network reachability from wherever the real Oracle
@@ -155,8 +161,16 @@ SELECT period_name, period_year FROM gl_periods LIMIT 5;
 
 ## DBeaver
 
+Works over either wire. Over the **Oracle wire**, create an **Oracle**
+connection instead and use the same fields as
+[SQL Developer above](#oracle-clients-sql-developer-sqlcl-sqlplus): Username
+**`FUSION`** (anything else authenticates but leaves the Tables/Views tree
+empty), Password = your `--oracle-password` / `ORACLE_WIRE_PASSWORD` value,
+host/port from `--oracle-listen`, service name anything. Over the
+**PostgreSQL wire**:
+
 1. **New Connection** → PostgreSQL (built-in driver).
-2. **Host** `127.0.0.1`, **Port** `5433`, **Database** `any`, User/Password anything.
+2. **Host** `127.0.0.1`, **Port** `5433`, **Database** `any`, User/Password anything (not validated).
 3. **Driver properties** → set:
    - `preferQueryMode` = `simple`  (skips binary-format params we don't need)
    - `loggerLevel` = `OFF` (pgJDBC chatter is noisy on query runs)

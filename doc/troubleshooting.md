@@ -3,8 +3,8 @@
 When something unexpected comes back from the proxy, check here before chasing into logs.
 
 **Run `ofpgproxy doctor` first.** Before digging into any of the sections
-below, `ofpgproxy doctor` (offline by default with `--offline`, or a live
-`SELECT 1 FROM DUAL` check without it) validates config, metadata.db, and
+below, `ofpgproxy doctor` — a live `SELECT 1 FROM DUAL` check by default, or
+pass `--offline` for zero network calls — validates config, metadata.db, and
 Fusion reachability using the exact same code path the server uses — often
 narrowing "something's wrong" down to one specific check in seconds.
 `ofpgproxy doctor --profiles` additionally prints exactly which Oracle-wire
@@ -22,6 +22,13 @@ see [Oracle clients → sqlplus](clients.md#sqlplus) and [Oracle
 (run `ofpgproxy doctor --profiles` for the full breakdown). If one still
 won't connect:
 
+- **Login fails / the connection drops right at the password step** — the
+  Oracle wire has one shared password: whatever you set in
+  `--oracle-password` / `ORACLE_WIRE_PASSWORD`. A wrong value fails the
+  O5LOGON mutual handshake, which some clients report unhelpfully (a dropped
+  connection rather than a clean "invalid password"). The **username** is
+  *not* validated — but use `FUSION` (uppercase) so IDE tree-browsing works
+  (see [the empty-tree item below](#sql-developer--vs-code-extension-tree-expands-with-no-error-but-no-tablesviews-listed)).
 - `ORA-12537: TNS:connection closed` / `ORA-12541: TNS:no listener`-class
   errors, or a login that hangs then drops right after the data-type
   negotiation — almost always means the client asked for **encryption or

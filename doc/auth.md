@@ -11,7 +11,12 @@
 
 The last three are OAuth grants for **headless cloud deployments** — no browser. For running reports (which BI Publisher does *as a user*), `jwt-assertion` is the one to reach for; see [Headless cloud](#headless-cloud-oauth) below.
 
-Clients connecting to the proxy itself **do not** need credentials: the proxy accepts any `user` / `password` in the PG-wire startup message (and any username with the shared `--oracle-password` on the Oracle-wire side). All actual authentication happens on the Fusion side using whichever mode you configured.
+Client-side credentials (what you type into psql / DBeaver / sqlplus) are a **separate, much simpler story** than the Fusion modes above:
+
+- **PG wire** — any `user` / `password` is accepted; nothing is validated.
+- **Oracle wire** — any username is accepted (use `FUSION`, uppercase, so IDE tree-browsing works — see [Connecting clients](clients.md#oracle-clients-sql-developer-sqlcl-sqlplus)), but the password **must be** the shared value you set with `--oracle-password` / `ORACLE_WIRE_PASSWORD`.
+
+All actual authentication against Oracle happens on the Fusion side using whichever mode you configured.
 
 ---
 

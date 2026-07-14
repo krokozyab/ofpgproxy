@@ -83,7 +83,7 @@ FUSION_HOST=fa-xxxx.oraclecloud.com FUSION_AUTH_TYPE=sso \
               --oracle-listen 127.0.0.1:1521 --oracle-password secret
 
 # 3a. Connect with a real Oracle client
-sqlplus fusion/secret@//127.0.0.1:1521/fusion
+sqlplus FUSION/secret@//127.0.0.1:1521/fusion
 
 # 3b. ...or with ANYTHING that speaks Postgres
 psql -h localhost -p 5433 -U anyone -d any \
