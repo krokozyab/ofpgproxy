@@ -3,7 +3,7 @@
 
   <h1>✨ ofpgproxy</h1>
   <p><strong>Talk to Oracle Fusion Cloud in native Oracle SQL*Net — <code>sqlplus</code>, SQL Developer, SQLcl, ojdbc, even a real Oracle database's own <code>dblink</code>.</strong></p>
-  <p>PostgreSQL wire protocol comes along for the ride too — Metabase, Superset, Grafana, dbt, and DBeaver connect just as natively. Same binary, same tenant, your pick of wire.</p>
+  <p>PostgreSQL wire protocol comes along for the ride too — Metabase, Superset, dbt, and DBeaver connect just as natively. Same binary, same tenant, your pick of wire.</p>
 
   <br />
 
@@ -45,7 +45,7 @@ Oracle Fusion Cloud's BI Publisher is the only sanctioned read-path out of a Saa
 ### 🎯 Native Oracle, no rewrite required
 
 Point existing Oracle tooling straight at Fusion — nothing to port:
-*   **`sqlplus` / SQL Developer / SQLcl** — `CONNECT` and `SELECT` run over the real wire (see `ofpgproxy doctor --profiles` for the evidence-graded scope). Read-only by construction: DML/DDL is refused with `ORA-16000`. sqlplus's own `DESCRIBE` command isn't supported yet (returns `ORA-03001`) — column metadata is browsable through the catalog / IDE object tree instead.
+*   **`sqlplus` / SQL Developer / SQLcl** — point them at Fusion and run your `SELECT`s, no rewrite. Read-only by design.
 *   **A real Oracle database's own `dblink`** — reconciliation scripts, migration validation, anything already written to query a remote Oracle schema keeps working unchanged.
 *   **ojdbc / python-oracledb** — service code that already speaks the Oracle driver connects without touching a line.
 *   *Note: read-only by construction — BI Publisher can't write, so DML is rejected regardless of client.*
@@ -57,14 +57,14 @@ The same tenant is also reachable over the PostgreSQL wire protocol — useful w
 *   **System Catalogs:** Emulates `pg_catalog` and `information_schema` so clients instantly discover 30,000+ tables.
 *   **SQL Dialect:** Translates Postgres idioms (`ILIKE`, `date_trunc`, `~`, `EXCEPT`) into Oracle SQL on the fly.
 
-Works natively with: **SQL Clients** (DBeaver, DataGrip, TablePlus, pgAdmin, `psql`), **BI & Dashboards** (Superset, Metabase, Redash, Grafana, Tableau, Power BI), **Data Integration** (DuckDB, `postgres_fdw`, dbt).
+Works natively with: **SQL Clients** (DBeaver, DataGrip, TablePlus, pgAdmin, `psql`), **BI & Dashboards** (Metabase, Superset, Tableau, Power BI), **Data Integration** (DuckDB, `postgres_fdw`, dbt).
 
 ---
 
 ## 💡 Why you need this
 
 * **Reuse the Oracle stack you already have:** `dblink`-based reconciliation, `sqlplus` scripts, SQL Developer habits — none of it needs to be rewritten for Fusion.
-* **Stop fighting the BI bottleneck:** Plug Metabase, Superset, or Grafana directly into Fusion over Postgres wire. No more waiting weeks for a custom data pipeline just to see a basic chart.
+* **Stop fighting the BI bottleneck:** Plug Metabase, Superset, or Power BI directly into Fusion over Postgres wire. No more waiting weeks for a custom data pipeline just to see a basic chart.
 * **Give analysts their tooling back:** DBeaver tree navigation, autocomplete, query history, and result grids all work natively, on either wire.
 
 ## 🚀 60-Second Magic Start
@@ -125,7 +125,7 @@ psql -h localhost -p 5433 -U anyone -d any \
 
 You run the binary. You get an Oracle SQL*Net endpoint on `:1521` and a PostgreSQL endpoint on `:5433` — except the tables inside are Oracle Fusion's.
 
-Everything that speaks either wire just connects: `sqlplus`, SQL Developer, SQLcl, a real Oracle database's `dblink`, `psql`, DBeaver, Metabase, Grafana, dbt, a Python script using psycopg or python-oracledb, a JVM service on pgJDBC or ojdbc. Each query transparently becomes a BI Publisher SOAP call under the hood; rows stream back as the XML arrives.
+Everything that speaks either wire just connects: `sqlplus`, SQL Developer, SQLcl, a real Oracle database's `dblink`, `psql`, DBeaver, Metabase, dbt, a Python script using psycopg or python-oracledb, a JVM service on pgJDBC or ojdbc. Each query transparently becomes a BI Publisher SOAP call under the hood; rows stream back as the XML arrives.
 
 **Your tools never find out it isn't a real database.**
 
