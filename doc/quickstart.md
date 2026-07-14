@@ -134,7 +134,7 @@ The three parts of that connect string:
 
 - **`FUSION`** — the username. Any username authenticates (access control is
   the Fusion session the proxy holds underneath), but use `FUSION` (uppercase)
-  as your habit: IDE catalog browsing (`DESCRIBE`, SQL Developer / DBeaver
+  as your habit: IDE catalog browsing (the SQL Developer / DBeaver object
   tree) only lines up when the connected username matches the single logical
   schema `FUSION` that every object is reported under.
 - **`changeme`** — the password: **exactly what you set `ORACLE_WIRE_PASSWORD`

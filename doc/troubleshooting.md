@@ -50,6 +50,22 @@ won't connect:
 
 Every `ORA-…` is forwarded from Fusion with a matching PostgreSQL SQLSTATE. The text is the original Oracle message — don't strip it, it's the quickest clue to the actual problem.
 
+### `ORA-16000: database open for read-only access`
+
+**Expected, not a bug.** You ran a write (INSERT / UPDATE / DELETE / MERGE /
+CREATE / DROP / ALTER … ). The proxy is read-only by construction — BI
+Publisher can only SELECT — so every DML/DDL statement is refused with this
+error, on every client wire. The session stays open; keep querying.
+
+### `ORA-03001: unimplemented feature (Oracle-wire call N not supported by this proxy)`
+
+**Expected, not a bug.** A client issued a call this proxy doesn't implement —
+most commonly sqlplus's `DESCRIBE` command (which asks for column metadata over
+its own protocol call, TTC func 119, rather than a query). The `DESCRIBE`
+command isn't supported yet; get column metadata from catalog views instead
+(`SELECT column_name, data_type FROM all_tab_columns WHERE table_name = '…'`),
+or from your IDE's object tree. The session is kept alive after the error.
+
 ### `ORA-00942: table or view does not exist`
 
 Fusion can't find the table. Two possibilities:
@@ -159,8 +175,8 @@ return zero rows.
 
 Fix: edit the connection and set **Username** to `FUSION` (the *password*
 stays your `--oracle-password` value — username isn't otherwise validated).
-Ad-hoc `SELECT`/`DESCRIBE` queries you type yourself aren't affected either
-way — this only breaks the auto-generated tree-browsing queries.
+Ad-hoc `SELECT`s you type yourself aren't affected either way — this only
+breaks the auto-generated tree-browsing queries.
 
 ### Empty `\d <table>` or empty Metabase schema sync
 

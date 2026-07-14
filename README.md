@@ -45,7 +45,7 @@ Oracle Fusion Cloud's BI Publisher is the only sanctioned read-path out of a Saa
 ### 🎯 Native Oracle, no rewrite required
 
 Point existing Oracle tooling straight at Fusion — nothing to port:
-*   **`sqlplus` / SQL Developer / SQLcl** — `CONNECT`, `SELECT`, `DESCRIBE` work exactly like against a real instance.
+*   **`sqlplus` / SQL Developer / SQLcl** — `CONNECT` and `SELECT` run over the real wire (see `ofpgproxy doctor --profiles` for the evidence-graded scope). Read-only by construction: DML/DDL is refused with `ORA-16000`. sqlplus's own `DESCRIBE` command isn't supported yet (returns `ORA-03001`) — column metadata is browsable through the catalog / IDE object tree instead.
 *   **A real Oracle database's own `dblink`** — reconciliation scripts, migration validation, anything already written to query a remote Oracle schema keeps working unchanged.
 *   **ojdbc / python-oracledb** — service code that already speaks the Oracle driver connects without touching a line.
 *   *Note: read-only by construction — BI Publisher can't write, so DML is rejected regardless of client.*

@@ -28,7 +28,7 @@ value:
   "Tables"/"Views" tree query to `WHERE OWNER = <your connected username>` —
   entirely client-side, no server round trip — so any *other* username makes
   the tree render successfully but empty (no error, just nothing under
-  Tables/Views). Ad-hoc `SELECT`/`DESCRIBE` queries aren't affected by this —
+  Tables/Views). Ad-hoc `SELECT`s you type yourself aren't affected by this —
   only the tree's own auto-generated catalog queries are.
 - **Password** — **the value you set** in `--oracle-password` /
   `ORACLE_WIRE_PASSWORD` (there's no default — the proxy won't start the Oracle
@@ -102,13 +102,14 @@ sqlplus FUSION/secret@//127.0.0.1:1521/fusion
 ```
 
 Same credentials as SQLcl above — `FUSION` is the recommended username (any
-value authenticates, but `DESCRIBE`/`SHOW` catalog commands only line up with
-the single logical schema every object is reported under when you connect as
-`FUSION`), `secret` stands for your `--oracle-password` /
-`ORACLE_WIRE_PASSWORD` value, service name after `/` is arbitrary. Ordinary
-`SELECT`s, `DESCRIBE`, and `DBMS_OUTPUT`-free anonymous PL/SQL blocks that
-only run session no-ops (`ALTER SESSION`, `COMMIT`/`ROLLBACK`) work; any real
-write is rejected.
+value authenticates, but IDE object trees only line up with the single logical
+schema every object is reported under when you connect as `FUSION`), `secret`
+stands for your `--oracle-password` / `ORACLE_WIRE_PASSWORD` value, service
+name after `/` is arbitrary. Ordinary `SELECT`s and `DBMS_OUTPUT`-free
+anonymous PL/SQL blocks that only run session no-ops (`ALTER SESSION`,
+`COMMIT`/`ROLLBACK`) work; a write (DML/DDL) is refused with `ORA-16000`, and
+sqlplus's `DESCRIBE` command is not supported (it returns `ORA-03001` — column
+metadata is available through catalog views / the IDE tree instead).
 
 Verified scope for a direct `sqlplus` session is narrower than "ordinary
 SELECTs" suggests — run `ofpgproxy doctor --profiles` for the exact,
