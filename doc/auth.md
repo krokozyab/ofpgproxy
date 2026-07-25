@@ -11,10 +11,9 @@
 
 The last three are OAuth grants for **headless cloud deployments** — no browser. For running reports (which BI Publisher does *as a user*), `jwt-assertion` is the one to reach for; see [Headless cloud](#headless-cloud-oauth) below.
 
-Client-side credentials (what you type into psql / DBeaver / sqlplus) are a **separate, much simpler story** than the Fusion modes above:
+Client-side credentials (what you type into `sqlplus`, SQL Developer or DBeaver) are a **separate, much simpler story** than the Fusion modes above:
 
-- **PG wire** — any `user` / `password` is accepted; nothing is validated.
-- **Oracle wire** — any username is accepted (use `FUSION`, uppercase, so IDE tree-browsing works — see [Connecting clients](clients.md#oracle-clients-sql-developer-sqlcl-sqlplus)), but the password **must be** the shared value you set with `--oracle-password` / `ORACLE_WIRE_PASSWORD`.
+- Any username is accepted (use `FUSION`, uppercase, so IDE tree-browsing works — see [Connecting clients](clients.md#oracle-clients-sql-developer-sqlcl-sqlplus)), but the password **must be** the shared value you set with `--oracle-password` / `ORACLE_WIRE_PASSWORD`.
 
 All actual authentication against Oracle happens on the Fusion side using whichever mode you configured.
 
@@ -172,6 +171,6 @@ Per-connection authentication (tenant picked by the PG client's `user` / `dbname
 
 ## Security notes
 
-- The proxy **does not** authenticate its own PG-wire clients. Bind it to loopback (`127.0.0.1`, the default) or put it behind an authenticating reverse proxy / SSH tunnel. Never expose `:5433` to a public network.
-- TLS on the PG-wire side is not enabled by default. If you need it, terminate TLS at a fronting proxy (stunnel, nginx stream module, etc.).
+- The Oracle-wire listener's only credential is the shared `--oracle-password`. Bind it to loopback (`127.0.0.1`) or reach it over a tunnel / private network; if it must listen on a routable address, treat that password as the whole of your access control and pick it accordingly.
+- TLS (TCPS) is not implemented. If you need the wire encrypted, terminate TLS in front of the proxy (stunnel, nginx stream module) and forward plaintext to it on loopback.
 - SOAP calls to Fusion go over HTTPS with server-certificate validation by default — no action needed.

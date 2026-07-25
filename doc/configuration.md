@@ -2,7 +2,7 @@
 
 `ofpgproxy` takes configuration from two places:
 
-1. Command-line flags (`./ofpgproxy --listen :5433 …`).
+1. Command-line flags (`./ofpgproxy --oracle-listen 127.0.0.1:1521 …`).
 2. Environment variables (or a `.env` file sourced before launch).
 
 Flags always win over environment variables. A few parameters are available only one way — noted below.
@@ -13,8 +13,7 @@ Flags always win over environment variables. A few parameters are available only
 
 | Flag | Env | Default | Description |
 |---|---|---|---|
-| `--listen` | `OFPG_LISTEN` | `127.0.0.1:5433` | `host:port` the PG-wire (Postgres) listener binds to. |
-| `--oracle-listen` | `OFPG_ORACLE_LISTEN` | off | `host:port` for a second, read-only **Oracle-wire (TNS/TTC)** listener so Oracle clients (SQLcl, python-oracledb, ojdbc) connect too. Shares the SOAP backend + metadata catalog. See [Oracle-wire frontend](#oracle-wire-frontend). |
+| `--oracle-listen` | `OFPG_ORACLE_LISTEN` | off | `host:port` the read-only **Oracle-wire (TNS/TTC)** listener binds to, for `sqlplus`, SQL Developer, SQLcl, ojdbc, python-oracledb and another database's `dblink`. See [Oracle-wire frontend](#oracle-wire-frontend). |
 | `--oracle-password` | `ORACLE_WIRE_PASSWORD` | — | Shared password the Oracle-wire O5LOGON handshake accepts (any username). **Required** with `--oracle-listen`. |
 | `--metrics-listen` | `OFPG_METRICS_LISTEN` | off | `host:port` for the ops HTTP server: Prometheus `/metrics` + `/healthz` + `/readyz`. Requires `--oracle-listen`. No auth — bind to loopback. See [Observability](observability.md). |
 | `--oracle-protocol-timeout` | `OFPG_ORACLE_PROTOCOL_TIMEOUT` | `30s` | Protocol watchdog timeout for the Oracle-wire frontend, `time.Duration` syntax. `0` disables it. See [Protocol watchdog & diagnostics](#protocol-watchdog--diagnostics). |
@@ -27,7 +26,9 @@ Flags always win over environment variables. A few parameters are available only
 |---|---|---|---|
 | `--fusion-host` | `FUSION_HOST` | — | Fusion tenant hostname. **No protocol, no path.** Example: `fa-xxxx.oraclecloud.com`. |
 | `--report-path` | `FUSION_SQL_REPORT_PATH` | `/Custom/Financials/RP_ARB.xdo` | BI Publisher report absolute path. Most tenants use `/Custom/sql/RP_ARB.xdo`. |
-| `--metadata-path` | — | — | Path to `metadata.db`. Without it `pg_catalog` queries return empty — DBeaver trees look empty, `\d` returns nothing, but foreign SELECTs still work. Enables metadata-driven column typing on the Oracle-wire side. |
+| `--metadata-cache` | — | `metadata-cache.db` beside the binary | Writable catalog the proxy fills from your tenant on demand. See [Metadata catalog](metadata.md). |
+| `--metadata-path` | — | — | An existing catalog file. On its own it is used **read-only**; with `--metadata-cache` it seeds the cache once and is never written to. |
+| `--metadata-refresh` | — | `0s` (off) | Re-read the tenant's table list on a timer. `SIGHUP` always triggers one. |
 | `--foreign-batch-size` | — | `200` | Rows per SOAP call when an **IDE client** runs a foreign SELECT without `LIMIT`. `0` disables auto-pagination (code clients always get a single shot). See [Clients — pagination](clients.md#pagination). |
 | `--soap-concurrency` | `FUSION_SOAP_CONCURRENCY` | `1` | Max concurrent SOAP calls to BI Publisher. Default `1` serialises all foreign SELECTs. Raise to `2`–`4` for IDE-heavy use; too high and the tenant refuses logins. See [SOAP concurrency](#soap-concurrency). |
 | `--log-queries` | — | `true` | One structured log entry per incoming query (kind, table, duration). Set `false` in production after tuning. |
@@ -65,19 +66,16 @@ copy-paste starting point lives in `.env.example`.
 ## Oracle-wire frontend
 
 Set `--oracle-listen`/`OFPG_ORACLE_LISTEN` (plus `--oracle-password`) to expose
-a second, **read-only** listener speaking the Oracle TNS/TTC protocol, so
-Oracle clients — SQLcl, python-oracledb, ojdbc/JDBC — connect alongside the
-PG-wire port. It shares the same SOAP backend, auth and metadata catalog. With
-`--metadata-path` set, columns describe with their real Oracle types
-(NUMBER/DATE/TIMESTAMP/RAW/CLOB/BLOB/…) resolved from the catalog. Both
-frontends run in one process and drain together on shutdown.
+the **read-only** listener speaking the Oracle TNS/TTC protocol, so `sqlplus`,
+SQL Developer, SQLcl, ojdbc, python-oracledb and another database's `dblink`
+connect. Columns describe with their real Oracle types
+(NUMBER/DATE/TIMESTAMP/RAW/CLOB/BLOB/…) resolved from the metadata catalog.
 
 ```bash
 ./ofpgproxy \
-  --listen 127.0.0.1:5433 \
   --oracle-listen 127.0.0.1:1521 --oracle-password secret \
-  --metadata-path ./metadata.db
-# psql on :5433, sqlcl/SQL Developer/python-oracledb on :1521
+  --fusion-host fa-xxxx.oraclecloud.com --auth=sso
+# sqlplus / SQL Developer / SQLcl / python-oracledb on :1521
 ```
 
 Oracle clients log in with **any username** and the shared `--oracle-password`
@@ -170,7 +168,7 @@ By default the proxy runs **one** SOAP call to BI Publisher at a time — every 
 For IDE-heavy use (DBeaver, DataGrip, DBVis tabs running queries in parallel), `1` becomes painful — a long `SELECT` blocks every other window. Raise the cap when you care more about responsiveness than minimising session pressure:
 
 ```bash
-./ofpgproxy --listen 127.0.0.1:5433 --metadata-path ./metadata.db \
+./ofpgproxy --oracle-listen 127.0.0.1:1521 --oracle-password secret \
   --soap-concurrency 4 \
   --fusion-host fa-xxxx.oraclecloud.com --auth=sso
 ```
@@ -187,7 +185,7 @@ Sizing guide:
 - **`2`–`4`** — typical for interactive use. Single SSO/password session, BIP usually treats parallel calls under the same session-cookie as the same logical user.
 - **`>4`** — test on your own tenant first. Some Fusion releases throttle hard above small concurrency; you may see intermittent `WSM-07501` / login refusals before any benefit shows up.
 
-`pg_catalog` / `information_schema` queries (the noisy IDE introspection traffic) **never** hit this gate — they're answered locally from DuckDB. Only foreign `SELECT`s against Fusion tables are serialised.
+Data-dictionary queries (`ALL_TABLES`, `ALL_TAB_COLUMNS`, … — the noisy IDE introspection traffic) **never** hit this gate; they're answered locally from the catalog. Only `SELECT`s against Fusion tables are serialised.
 
 The active value shows in the startup banner under `soap`:
 
@@ -295,7 +293,7 @@ see [Troubleshooting](troubleshooting.md) for the matching log line shape.
 A small built-in web page that shows, statement by statement, what the proxy *would* do with a given SQL — which router branch it lands in (catalog stub, foreign SELECT, cursor, session no-op, …) and the rewritten SQL that would go to BI Publisher or to the local DuckDB catalog. No connection to a Fusion tenant is required; translation is entirely offline.
 
 ```bash
-./ofpgproxy --listen 127.0.0.1:5433 --translate-http 127.0.0.1:8080
+./ofpgproxy --oracle-listen 127.0.0.1:1521 --oracle-password secret --translate-http 127.0.0.1:8080
 ```
 
 Then open <http://127.0.0.1:8080> in a browser. `make run` enables it by default on `127.0.0.1:8080`; disable with `make run TRANSLATE_HTTP=`.

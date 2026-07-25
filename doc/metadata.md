@@ -1,25 +1,66 @@
 # Metadata catalog
 
-`metadata.db` is a DuckDB file that describes your Fusion tenant's schema. The proxy reads it at startup to serve `pg_catalog` and `information_schema` queries — what DBeaver's tree, `\d`, and any tool that does a catalog sync need.
+The catalog is a DuckDB file describing your Fusion tenant's schema. The proxy
+answers Oracle data-dictionary queries from it — `ALL_TABLES`,
+`ALL_TAB_COLUMNS`, `ALL_OBJECTS`, `USER_*`, `DBA_*` — so an IDE's schema tree,
+autocomplete and `DESCRIBE` resolve locally instead of costing a BI Publisher
+round trip each. It also gives every result column its real Oracle type and
+width, which is how `TIMESTAMP`, `RAW` and `CLOB` describe correctly rather
+than being guessed from the values.
+
+## It fills itself
+
+There is nothing to install. On first start the proxy creates
+`metadata-cache.db` next to the binary and populates it from your tenant as it
+is used:
+
+- **The table list** is fetched in the background the first time a client asks
+  for it — tens of BI Publisher calls, a couple of minutes, while the proxy
+  keeps serving.
+- **A table's columns** are fetched the first time a client asks for that
+  table. One call, kept for good. Ten clients expanding the same tree node
+  cost one call, not ten; a table your tenant doesn't have is remembered so a
+  polling client can't generate a call per attempt.
+
+Progress is in the log, and `orawire_metadata_*` counters on `/metrics` show
+how many fetches happened and whether a bootstrap is running.
+
+To fill it in one go instead — thousands of BI Publisher calls, so run it
+deliberately and throttle it on a shared tenant:
+
+```bash
+ofpgproxy warm-metadata --fusion-host <host> --page-size 500 --interval 2s
+```
+
+## Flags
+
+| Flag | Meaning |
+|---|---|
+| `--metadata-cache <path>` | where the writable catalog lives. Defaults to `metadata-cache.db` beside the binary |
+| `--metadata-path <path>` | an existing catalog file. On its own it is used **read-only**; with `--metadata-cache` it seeds the cache once and is never written to |
+| `--metadata-refresh <duration>` | re-read the tenant's table list on a timer. Off by default; `SIGHUP` always triggers one |
+
+A pre-built catalog is attached to each release for anyone who wants a
+populated cache without any backend calls. It is optional.
 
 ## What's in it
 
-Four tables, all populated from Fusion's `FND_TABLES` / `FND_COLUMNS` / `FND_VIEWS` / module registry:
+Four tables, all populated from Fusion's `FND_TABLES` / `FND_VIEWS` /
+`FND_COLUMNS` / `FND_PRIMARY_KEY_COLUMNS` / module registry:
 
 | Table | Rows | Purpose |
 |---|---|---|
 | `cached_tables` | ~30 000 | one row per table/view (name, module, type) |
 | `cached_columns` | ~1 200 000 | one row per column (name, Oracle type, width, nullability) |
-| `cached_primary_keys` | ~80 000 | PK columns for join discovery |
+| `cached_primary_keys` | ~40 000 | PK columns for join discovery |
 | `cached_modules` | a few hundred | Fusion module index used for schema naming |
 
-Sizes are typical — your tenant may differ.
-
-The proxy opens this file **read-only**. Multiple proxy instances on the same machine can share one file.
+Sizes are typical — your tenant may differ. A self-populated cache holds only
+what has actually been asked for, which is normally far less.
 
 ## Oracle type codes inside `cached_columns.column_type`
 
-The shipped catalog uses a compact form for the common cases:
+The catalog uses a compact form for the common cases:
 
 | Code | Oracle type |
 |---|---|
@@ -29,25 +70,45 @@ The shipped catalog uses a compact form for the common cases:
 | `D` | `DATE` |
 | `CHAR`, `NCHAR`, `CLOB`, `NCLOB`, `BLOB`, `RAW`, `TIMESTAMP`, `TIMESTAMP_WITH_TIMEZONE`, `XMLTYPE`, `BFILE`, `UROWID` | full Oracle name |
 
-The proxy maps these to PG OIDs on the fly for `pg_attribute` results, and uses the same information for the type-aware boolean rewrite (`= TRUE` on VARCHAR2 columns becomes `= 'Y'`, on NUMBER becomes `= 1`).
-
 ## Refreshing
 
-The shipped `metadata.db` reflects a stock Fusion catalog at release time. When your tenant changes (module install, patch rollout, custom-DFF deployment) the file gets out of date and newly-added tables won't appear in DBeaver's tree, `\d`, or any catalog-driven tool.
+Fusion's schema is static on our timescale, so nothing refreshes on a timer by
+default. When your tenant does change — module install, patch rollout, custom
+DFF deployment — new objects appear once the table list is re-read:
 
-The shipped releases include a refreshed catalog every few weeks. If you need a tenant-specific snapshot sooner — open a GitHub issue.
+- **`SIGHUP`** (`kill -HUP $(pgrep ofpgproxy)`) reloads the catalog and, when
+  it is writable, re-reads the table list from the tenant. Connected clients
+  see the new schema on their next query; in-flight queries finish against the
+  previous catalog.
+- **`--metadata-refresh 24h`** does the same on a timer.
+- **`ofpgproxy warm-metadata`** rebuilds everything, including primary keys
+  and modules.
 
-Once you have a new file, swap it in either way:
+Columns of a table added since the last fetch are picked up on demand, with no
+action at all.
 
-- **Hot reload (no restart).** Overwrite `metadata.db` in place, then `kill -HUP $(pgrep ofpgproxy)`. The proxy swaps the new catalog in atomically — connected clients see the new schema on their next query, no reconnect, and any in-flight query finishes against the previous catalog.
-- **Restart.** Replace the file and bounce the proxy. Clients re-authenticate (SSO) on the new process.
+## Health
+
+`ofpgproxy doctor` reports whether the catalog is actually populated —
+an empty one answers every query with nothing, which otherwise looks like
+success — and how long ago the table list was read from the tenant:
+
+```
+PASS  metadata.open        metadata cache opened
+PASS  metadata.schema      all 4 cached_* tables present
+WARN  metadata.counts      cached_tables is EMPTY — no object will resolve
+PASS  metadata.freshness   table list refreshed 2h13m ago
+```
 
 ## What happens without a catalog
 
-If `--metadata-path` is omitted, the proxy still boots and:
+If the cache cannot be created (a read-only install directory, say) the proxy
+warns and keeps running:
 
-- Foreign SELECTs against known table names still work (the SQL goes to BIP as-is).
-- `SELECT 1`, session SET / SHOW / BEGIN / COMMIT all work.
-- `pg_catalog` / `information_schema` queries return empty. DBeaver's tree appears empty, `\d` returns nothing, Metabase's schema sync finds zero tables.
+- `SELECT`s against known table names still work — the SQL goes to BI
+  Publisher as-is.
+- Session no-ops (`ALTER SESSION`, `SET`, `COMMIT`) still work.
+- Data-dictionary queries return nothing, so an IDE's tree appears empty and
+  column types fall back to being inferred from the values.
 
-Useful for basic handshake / smoke testing. Production deployments should always mount a catalog.
+Point `--metadata-cache` at a writable path to fix it.
