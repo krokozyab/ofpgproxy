@@ -1,12 +1,20 @@
 # Metadata catalog
 
-The catalog is a DuckDB file describing your Fusion tenant's schema. The proxy
-answers Oracle data-dictionary queries from it — `ALL_TABLES`,
-`ALL_TAB_COLUMNS`, `ALL_OBJECTS`, `USER_*`, `DBA_*` — so an IDE's schema tree,
-autocomplete and `DESCRIBE` resolve locally instead of costing a BI Publisher
-round trip each. It also gives every result column its real Oracle type and
-width, which is how `TIMESTAMP`, `RAW` and `CLOB` describe correctly rather
-than being guessed from the values.
+The catalog is a DuckDB file describing your Fusion tenant's schema. Two
+different sets of names meet in it, which is worth getting straight up front:
+
+- **What fills it.** Fusion's own application dictionary —
+  `FND_TABLES`, `FND_VIEWS`, `FND_COLUMNS`, `FND_PRIMARY_KEY_COLUMNS` and the
+  module taxonomy. Those are the queries the proxy sends to BI Publisher, and
+  their rows land in the `cached_*` tables below.
+- **What it answers.** The Oracle data dictionary your client asks for —
+  `ALL_TABLES`, `ALL_TAB_COLUMNS`, `ALL_OBJECTS`, `USER_*`, `DBA_*`, `DUAL`.
+  Those are views over `cached_*`, computed locally.
+
+So an IDE's schema tree, autocomplete and `DESCRIBE` resolve without a BI
+Publisher round trip each. The catalog also gives every result column its real
+Oracle type and width, which is how `TIMESTAMP`, `RAW` and `CLOB` describe
+correctly rather than being guessed from the values.
 
 ## It fills itself
 
