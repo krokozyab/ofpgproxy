@@ -1,6 +1,6 @@
 # Authentication
 
-`ofpgproxy` supports six auth modes for the **Fusion backend**, selected via `--auth` / `FUSION_AUTH_TYPE`:
+`oratofusionproxy` supports six auth modes for the **Fusion backend**, selected via `--auth` / `FUSION_AUTH_TYPE`:
 
 - `sso` — browser-based federated login (most common on real tenants)
 - `password` — basic auth
@@ -24,7 +24,7 @@ All actual authentication against Oracle happens on the Fusion side using whiche
 ```bash
 FUSION_HOST=fa-xxxx.oraclecloud.com \
 FUSION_AUTH_TYPE=sso \
-./ofpgproxy
+./oratofusionproxy
 ```
 
 ### How it works
@@ -59,7 +59,7 @@ Basic auth with a static Fusion user:
 FUSION_AUTH_TYPE=password \
 FUSION_USER=bip.integration \
 FUSION_PASSWORD=... \
-./ofpgproxy
+./oratofusionproxy
 ```
 
 The credentials are sent on every SOAP call directly — no browser, no refresh logic. Simple but less common on modern tenants that require SAML/OIDC.
@@ -73,7 +73,7 @@ Prefer the env-var form over `--auth-password` to keep the secret out of the pro
 For out-of-band-authenticated setups:
 
 ```bash
-./ofpgproxy \
+./oratofusionproxy \
   --auth token-file \
   --auth-token-file /run/secrets/fusion-token \
  
@@ -102,7 +102,7 @@ tokens against Fusion's token-relay endpoint and refreshes automatically
 ```bash
 FUSION_AUTH_TYPE=token-refresh \
 FUSION_REFRESH_TOKEN=... \
-./ofpgproxy --fusion-host fa-xxxx.oraclecloud.com
+./oratofusionproxy --fusion-host fa-xxxx.oraclecloud.com
 ```
 
 The refresh token is the credential you supply; the initial access token is
@@ -120,7 +120,7 @@ FUSION_AUTH_TYPE=client-credentials \
 FUSION_OAUTH_TOKEN_URL=https://<idcs-host>/oauth2/v1/token \
 FUSION_OAUTH_CLIENT_ID=... FUSION_OAUTH_CLIENT_SECRET=... \
 FUSION_OAUTH_SCOPE=... \
-./ofpgproxy --fusion-host fa-xxxx.oraclecloud.com
+./oratofusionproxy --fusion-host fa-xxxx.oraclecloud.com
 ```
 
 > ⚠️ A client-credentials token is **app-only** — it carries no user identity.
@@ -142,7 +142,7 @@ FUSION_JWT_SUBJECT=svc.reporting@corp \
 FUSION_JWT_KEY_FILE=/run/secrets/assertion-key.pem \
 FUSION_JWT_KEY_ID=<kid> \
 FUSION_JWT_AUDIENCE=https://<idp-host>/ \
-./ofpgproxy --fusion-host fa-xxxx.oraclecloud.com
+./oratofusionproxy --fusion-host fa-xxxx.oraclecloud.com
 ```
 
 Setup (a **tenant-admin** task):

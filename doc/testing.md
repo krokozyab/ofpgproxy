@@ -1,6 +1,6 @@
 # Testing & verification
 
-`ofpgproxy` ships as a single obfuscated binary — the source is closed. This
+`oratofusionproxy` ships as a single obfuscated binary — the source is closed. This
 page exists so you can judge what the proxy actually does without reading it:
 every capability listed here is backed either by a byte-exact protocol test
 that runs on every build, or by a live run against a real Oracle Fusion Cloud

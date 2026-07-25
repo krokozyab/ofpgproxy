@@ -1,13 +1,13 @@
 <div align="center">
-  <img src="assets/hero.png" alt="ofpgproxy" width="800" />
+  <img src="assets/hero.png" alt="oratofusionproxy" width="800" />
 
-  <h1>✨ ofpgproxy</h1>
+  <h1>✨ oratofusionproxy</h1>
   <p><strong>Query Oracle Fusion Cloud with the Oracle clients you already have — SQLcl, DBeaver, SQL Developer, ojdbc, python-oracledb, and a real Oracle database's own <code>dblink</code>.</strong></p>
   <p>One binary between your existing Oracle tooling and a SaaS tenant that only speaks SOAP.</p>
 
   <br />
 
-  <img src="assets/oracle-wire.png" alt="Oracle clients and another Oracle database's dblink reach Oracle Fusion Cloud through ofpgproxy over TNS/TTC" width="850" />
+  <img src="assets/oracle-wire.png" alt="Oracle clients and another Oracle database's dblink reach Oracle Fusion Cloud through oratofusionproxy over TNS/TTC" width="850" />
 
   <br />
   <br />
@@ -23,7 +23,7 @@
 
 Oracle Fusion Cloud's BI Publisher is the only sanctioned read-path out of a SaaS tenant. It speaks SOAP, returns base64-wrapped XML — and every Oracle client you already own (SQLcl, DBeaver, a reconciliation script over `dblink`, an ojdbc-based service) expects the real Oracle wire protocol instead.
 
-**`ofpgproxy` sits between them and makes them agree.**
+**`oratofusionproxy` sits between them and makes them agree.**
 
 ```text
                     Oracle clients
@@ -33,7 +33,7 @@ Oracle Fusion Cloud's BI Publisher is the only sanctioned read-path out of a Saa
                           │  Oracle Net (TNS/TTC)
                           ▼
                   ┌───────────────┐
-                  │   ofpgproxy   │
+                  │ oratofusionproxy │
                   └───────────────┘
                           │
                           │  SOAP (BI Publisher · RP_ARB.xdo)
@@ -62,13 +62,13 @@ Point existing Oracle tooling straight at Fusion — nothing to port:
 ```bash
 # 1. Grab the binary from the latest release:
 #    https://github.com/krokozyab/oracle-fusion-tns-proxy/releases/latest
-./ofpgproxy --version
+./oratofusionproxy --version
 
 # 2. Point it at your Oracle Fusion tenant.
 #    --oracle-password is a value YOU choose here and now; it is not a Fusion
 #    password. Every Oracle client will log in with this exact string.
 FUSION_HOST=fa-xxxx.oraclecloud.com FUSION_AUTH_TYPE=sso \
-  ./ofpgproxy --oracle-listen 127.0.0.1:1521 --oracle-password changeme
+  ./oratofusionproxy --oracle-listen 127.0.0.1:1521 --oracle-password changeme
 
 # 3. Connect with a real Oracle client — SQLcl here, one download, no
 #    Instant Client needed. user = FUSION, password = the --oracle-password
@@ -91,7 +91,7 @@ The service name is ignored — put anything after the `/`.
 
 *First run opens your IdP in Chrome; the SSO token is then held in-process. If your tenant supports it, standard basic authentication (`--auth=password`) is also available.*
 
-The data-dictionary catalog needs no setup: the proxy keeps its own cache next to the binary and fills it from your tenant as you use it — the table list on first use, a table's columns the first time a client asks. One BI Publisher call each, kept for good. `ofpgproxy warm-metadata` fills it in one go if you'd rather not wait.
+The data-dictionary catalog needs no setup: the proxy keeps its own cache next to the binary and fills it from your tenant as you use it — the table list on first use, a table's columns the first time a client asks. One BI Publisher call each, kept for good. `oratofusionproxy warm-metadata` fills it in one go if you'd rather not wait.
 
 👉 **[Read the Full Quick Start Guide](doc/quickstart.md)** · **[Connecting Oracle clients](doc/clients.md#oracle-clients-sqlcl-dbeaver-sql-developer)**
 
@@ -102,7 +102,7 @@ The data-dictionary catalog needs no setup: the proxy keeps its own cache next t
 * 📚 **A catalog that builds itself.** Schema browsing is answered locally from a DuckDB catalog the proxy fills from your tenant on demand, so an IDE's tree never costs a slow round trip twice.
 * 🌊 **Paged, not piled up.** GUI clients get their results in pages, so a wide table's first screen arrives in seconds and the proxy holds one page at a time. An unbounded query from a code client is one backend call and is held whole — bound it with `ROWNUM` and the footprint stays small.
 * 🔒 **Read-only by design.** BI Publisher can't write, and neither will the proxy. No accidental DML. Sleep soundly.
-* 🩺 **Built-in `doctor`.** `ofpgproxy doctor` validates config, catalog health and Fusion reachability — and reports exactly which Oracle client/dialect combinations this build has verified — before you ever point a real client at it. [Details](doc/configuration.md#ofpgproxy-doctor).
+* 🩺 **Built-in `doctor`.** `oratofusionproxy doctor` validates config, catalog health and Fusion reachability — and reports exactly which Oracle client/dialect combinations this build has verified — before you ever point a real client at it. [Details](doc/configuration.md#oratofusionproxy-doctor).
 
 ## 📖 Documentation
 
@@ -110,7 +110,7 @@ The data-dictionary catalog needs no setup: the proxy keeps its own cache next t
 |---|---|
 | 🏎️ [**Quick Start**](doc/quickstart.md) | Zero to your first `SELECT` in 5 minutes |
 | 🤝 [**Connecting clients**](doc/clients.md) | Recipes for SQLcl, DBeaver, SQL Developer, `dblink`, ojdbc, python-oracledb |
-| ⚙️ [**Configuration**](doc/configuration.md) | Flags, env vars, ports, `ofpgproxy doctor`, and signals |
+| ⚙️ [**Configuration**](doc/configuration.md) | Flags, env vars, ports, `oratofusionproxy doctor`, and signals |
 | 🔑 [**Authentication**](doc/auth.md) | SSO, password, token-file, and OAuth (refresh / client-credentials / JWT-assertion) modes |
 | 🏛️ [**Fusion prerequisites**](doc/fusion-prerequisites.md) | What must exist in the tenant: the report, the account's rights, the endpoint — and how to verify them |
 | 🔗 [**EBS R12 over `dblink`**](doc/r12-dblink.md) | Copy-paste recipe for reading Fusion from an R12 database, versions covered, DBA notes |
@@ -128,14 +128,14 @@ Everything that speaks to an Oracle database just connects: SQLcl, DBeaver, SQL 
 
 **Your tools never find out it isn't a real database.**
 
-*Actively developed. Expect rough edges on exotic SQL shapes and unverified client/dialect combinations — `ofpgproxy doctor --profiles` shows exactly what's covered today, and [Testing & verification](doc/testing.md) has the full matrix. Open an issue when you hit one.*
+*Actively developed. Expect rough edges on exotic SQL shapes and unverified client/dialect combinations — `oratofusionproxy doctor --profiles` shows exactly what's covered today, and [Testing & verification](doc/testing.md) has the full matrix. Open an issue when you hit one.*
 
 ## ⚖️ Independence & trademarks
 
-`ofpgproxy` is an independent, third-party tool. It is **not affiliated with, endorsed by, sponsored by, or supported by Oracle Corporation.**
+`oratofusionproxy` is an independent, third-party tool. It is **not affiliated with, endorsed by, sponsored by, or supported by Oracle Corporation.**
 
-"Oracle", "Oracle Fusion Cloud", "Oracle Net", "SQL Developer", and "SQLcl" are trademarks or registered trademarks of Oracle and/or its affiliates. They are used here only descriptively — to state what `ofpgproxy` interoperates with — and no affiliation or endorsement is implied.
+"Oracle", "Oracle Fusion Cloud", "Oracle Net", "SQL Developer", and "SQLcl" are trademarks or registered trademarks of Oracle and/or its affiliates. They are used here only descriptively — to state what `oratofusionproxy` interoperates with — and no affiliation or endorsement is implied.
 
-`ofpgproxy` reads your tenant **only through Oracle's own documented BI Publisher web service** — the interface Oracle provides for this — authenticating with credentials **you** supply. It bundles no Oracle software and copies no Oracle source code; the Oracle Net (TNS/TTC) endpoint is an independent implementation whose sole purpose is protocol interoperability.
+`oratofusionproxy` reads your tenant **only through Oracle's own documented BI Publisher web service** — the interface Oracle provides for this — authenticating with credentials **you** supply. It bundles no Oracle software and copies no Oracle source code; the Oracle Net (TNS/TTC) endpoint is an independent implementation whose sole purpose is protocol interoperability.
 
-You are responsible for using `ofpgproxy` in accordance with your own Oracle Cloud subscription terms, license agreements, and applicable law. Nothing here is legal advice — if you have doubts, talk to your own counsel.
+You are responsible for using `oratofusionproxy` in accordance with your own Oracle Cloud subscription terms, license agreements, and applicable law. Nothing here is legal advice — if you have doubts, talk to your own counsel.

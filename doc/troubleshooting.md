@@ -2,12 +2,12 @@
 
 When something unexpected comes back from the proxy, check here before chasing into logs.
 
-**Run `ofpgproxy doctor` first.** Before digging into any of the sections
-below, `ofpgproxy doctor` — a live `SELECT 1 FROM DUAL` check by default, or
+**Run `oratofusionproxy doctor` first.** Before digging into any of the sections
+below, `oratofusionproxy doctor` — a live `SELECT 1 FROM DUAL` check by default, or
 pass `--offline` for zero network calls — validates config, metadata.db, and
 Fusion reachability using the exact same code path the server uses — often
 narrowing "something's wrong" down to one specific check in seconds.
-`ofpgproxy doctor --profiles` additionally prints exactly which Oracle-wire
+`oratofusionproxy doctor --profiles` additionally prints exactly which Oracle-wire
 client/dialect/feature combinations this build has verified support for, and
 a real connection's diagnostic bundle/logs report which profile it resolved
 to via `compat_profile`/`compat_support`.
@@ -19,7 +19,7 @@ own `dblink`) are supported against a **modern (23ai-era) Instant Client**,
 each verified only for a specific, narrower-than-"fully supported" scope —
 see [Oracle clients → sqlplus](clients.md#sqlplus) and [Oracle
 `dblink`](clients.md#oracle-dblink-a-real-oracle-database-as-the-client)
-(run `ofpgproxy doctor --profiles` for the full breakdown). If one still
+(run `oratofusionproxy doctor --profiles` for the full breakdown). If one still
 won't connect:
 
 - **Login fails / the connection drops right at the password step** — the
@@ -162,7 +162,7 @@ The proxy serialises `SELECT`s against Fusion through a single SOAP slot by defa
 Raise the cap for interactive use:
 
 ```bash
-./ofpgproxy … --soap-concurrency 4
+./oratofusionproxy … --soap-concurrency 4
 ```
 
 Sizing notes are in [Configuration → SOAP concurrency](configuration.md#soap-concurrency). The default stays low because BI Publisher accumulates server-side sessions; pushing it too high makes the tenant start refusing logins.
@@ -186,7 +186,7 @@ breaks the auto-generated tree-browsing queries.
 
 ### Empty schema tree, or a table with no columns
 
-Run `ofpgproxy doctor` — `metadata.counts` says outright whether the catalog is
+Run `oratofusionproxy doctor` — `metadata.counts` says outright whether the catalog is
 populated, and an empty one answers every query with nothing, which otherwise
 looks like success.
 

@@ -1,8 +1,8 @@
 # Configuration
 
-`ofpgproxy` takes configuration from two places:
+`oratofusionproxy` takes configuration from two places:
 
-1. Command-line flags (`./ofpgproxy --oracle-listen 127.0.0.1:1521 …`).
+1. Command-line flags (`./oratofusionproxy --oracle-listen 127.0.0.1:1521 …`).
 2. Environment variables (or a `.env` file sourced before launch).
 
 Flags always win over environment variables. A few parameters are available only one way — noted below.
@@ -72,7 +72,7 @@ SQLcl, DBeaver, SQL Developer, ojdbc, python-oracledb and another database's
 (NUMBER/DATE/TIMESTAMP/RAW/CLOB/BLOB/…) resolved from the metadata catalog.
 
 ```bash
-./ofpgproxy \
+./oratofusionproxy \
   --oracle-listen 127.0.0.1:1521 --oracle-password changeme \
   --fusion-host fa-xxxx.oraclecloud.com --auth=sso
 # sqlplus / SQL Developer / SQLcl / python-oracledb on :1521
@@ -94,15 +94,15 @@ out of scope; terminate TLS in front of the proxy instead if you need that.
 
 "Both work" does not mean every client/dialect works identically — coverage
 varies by client and query shape. See [Oracle clients](clients.md#oracle-clients-sqlcl-dbeaver-sql-developer)
-for connection strings. `ofpgproxy doctor` reports which profile a real
+for connection strings. `oratofusionproxy doctor` reports which profile a real
 connection resolves to and warns (never blocks) on an unverified one; run
-`ofpgproxy doctor --profiles` for the full, evidence-graded breakdown.
+`oratofusionproxy doctor --profiles` for the full, evidence-graded breakdown.
 
-## `ofpgproxy doctor`
+## `oratofusionproxy doctor`
 
-`ofpgproxy doctor` validates a concrete installation — config, `metadata.db`,
+`oratofusionproxy doctor` validates a concrete installation — config, `metadata.db`,
 and Fusion reachability — before you ever point a real client at it. It's the
-same `ofpgproxy` binary with `doctor` as its **first** argument; every other
+same `oratofusionproxy` binary with `doctor` as its **first** argument; every other
 flag and env var (`FUSION_HOST`, `FUSION_AUTH_TYPE`, `--metadata-path`, ...)
 is identical to the server's own — nothing doctor-specific to set up beyond
 whatever you'd already pass to run the proxy itself. It never starts a
@@ -112,14 +112,14 @@ Oracle-wire listener.
 # Same env vars and --metadata-path you'd use to actually run the proxy
 # (see the Quick Start above) — doctor reads them exactly the same way.
 FUSION_HOST=fa-xxxx.oraclecloud.com FUSION_AUTH_TYPE=sso \
-  ./ofpgproxy doctor --offline
+  ./oratofusionproxy doctor --offline
 ```
 
 ```bash
-./ofpgproxy doctor --offline                 # config + metadata.db only, zero network calls
-./ofpgproxy doctor --offline --format json   # same, machine-readable
-./ofpgproxy doctor --profiles                # print the Oracle-wire compatibility registry, zero Fusion calls
-./ofpgproxy doctor --deep --timeout 2m       # add bounded multi-type + wide-column Fusion probes
+./oratofusionproxy doctor --offline                 # config + metadata.db only, zero network calls
+./oratofusionproxy doctor --offline --format json   # same, machine-readable
+./oratofusionproxy doctor --profiles                # print the Oracle-wire compatibility registry, zero Fusion calls
+./oratofusionproxy doctor --deep --timeout 2m       # add bounded multi-type + wide-column Fusion probes
 ```
 
 Without `--offline`, `doctor` also runs a real, bounded `SELECT 1 FROM DUAL`
@@ -147,7 +147,7 @@ The proxy itself does **not** load `.env` automatically — source it before lau
 
 ```bash
 set -a; source .env; set +a
-./ofpgproxy
+./oratofusionproxy
 ```
 
 A `make run`–style wrapper script that loads `.env` and passes `--metadata-path` is typically two lines — see [Quick Start](quickstart.md) for an example.
@@ -168,7 +168,7 @@ By default the proxy runs **one** SOAP call to BI Publisher at a time — every 
 For IDE-heavy use (DBeaver, DataGrip, DBVis tabs running queries in parallel), `1` becomes painful — a long `SELECT` blocks every other window. Raise the cap when you care more about responsiveness than minimising session pressure:
 
 ```bash
-./ofpgproxy --oracle-listen 127.0.0.1:1521 --oracle-password changeme \
+./oratofusionproxy --oracle-listen 127.0.0.1:1521 --oracle-password changeme \
   --soap-concurrency 4 \
   --fusion-host fa-xxxx.oraclecloud.com --auth=sso
 ```
@@ -247,7 +247,7 @@ backend call normally regardless of this setting.
 Set `0` to disable the watchdog entirely.
 
 ```bash
-./ofpgproxy --oracle-listen 127.0.0.1:1521 --oracle-password changeme \
+./oratofusionproxy --oracle-listen 127.0.0.1:1521 --oracle-password changeme \
   --oracle-protocol-timeout 15s
 ```
 
@@ -278,9 +278,9 @@ produce one. A failed bundle write is only logged (and counted in
 own error handling.
 
 ```bash
-mkdir -p /var/log/ofpgproxy/diagnostics
-./ofpgproxy --oracle-listen 127.0.0.1:1521 --oracle-password changeme \
-  --oracle-diagnostic-dir /var/log/ofpgproxy/diagnostics
+mkdir -p /var/log/oratofusionproxy/diagnostics
+./oratofusionproxy --oracle-listen 127.0.0.1:1521 --oracle-password changeme \
+  --oracle-diagnostic-dir /var/log/oratofusionproxy/diagnostics
 ```
 
 **Attaching a bundle to a bug report:** find the newest
@@ -288,7 +288,7 @@ mkdir -p /var/log/ofpgproxy/diagnostics
 matching the log line's own `diagnostic_bundle=` path, and attach it as-is —
 see [Troubleshooting](troubleshooting.md) for the matching log line shape.
 
-## `ofpgproxy warm-metadata`
+## `oratofusionproxy warm-metadata`
 
 Fills the metadata catalog from your tenant in one go, then exits — the
 in-process equivalent of an offline export. Everything it fetches, the proxy
@@ -301,8 +301,8 @@ watch it. It is a subcommand rather than a server flag precisely so it can't be
 triggered by a proxy start.
 
 ```bash
-ofpgproxy warm-metadata \
-  --metadata-cache ~/.ofpgproxy/metadata-cache.db \
+oratofusionproxy warm-metadata \
+  --metadata-cache ~/.oratofusionproxy/metadata-cache.db \
   --fusion-host fa-xxxx.oraclecloud.com \
   --page-size 500 --interval 2s
 ```
@@ -325,7 +325,7 @@ Writes are idempotent — running it twice does not duplicate rows.
 A small built-in web page that shows, statement by statement, what the proxy *would* do with a given SQL — which router branch it lands in (catalog stub, foreign SELECT, cursor, session no-op, …) and the rewritten SQL that would go to BI Publisher or to the local DuckDB catalog. No connection to a Fusion tenant is required; translation is entirely offline.
 
 ```bash
-./ofpgproxy --oracle-listen 127.0.0.1:1521 --oracle-password changeme --translate-http 127.0.0.1:8080
+./oratofusionproxy --oracle-listen 127.0.0.1:1521 --oracle-password changeme --translate-http 127.0.0.1:8080
 ```
 
 Then open <http://127.0.0.1:8080> in a browser. `make run` enables it by default on `127.0.0.1:8080`; disable with `make run TRANSLATE_HTTP=`.

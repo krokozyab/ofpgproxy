@@ -41,7 +41,7 @@ To fill it in one go instead — thousands of BI Publisher calls, so run it
 deliberately and throttle it on a shared tenant:
 
 ```bash
-ofpgproxy warm-metadata --fusion-host <host> --page-size 500 --interval 2s
+oratofusionproxy warm-metadata --fusion-host <host> --page-size 500 --interval 2s
 ```
 
 ## Flags
@@ -88,12 +88,12 @@ Fusion's schema is static on our timescale, so nothing refreshes on a timer by
 default. When your tenant does change — module install, patch rollout, custom
 DFF deployment — new objects appear once the table list is re-read:
 
-- **`SIGHUP`** (`kill -HUP $(pgrep ofpgproxy)`) reloads the catalog and, when
+- **`SIGHUP`** (`kill -HUP $(pgrep oratofusionproxy)`) reloads the catalog and, when
   it is writable, re-reads the table list from the tenant. Connected clients
   see the new schema on their next query; in-flight queries finish against the
   previous catalog.
 - **`--metadata-refresh 24h`** does the same on a timer.
-- **`ofpgproxy warm-metadata`** rebuilds everything, including primary keys
+- **`oratofusionproxy warm-metadata`** rebuilds everything, including primary keys
   and modules.
 
 Columns of a table added since the last fetch are picked up on demand, with no
@@ -101,7 +101,7 @@ action at all.
 
 ## Health
 
-`ofpgproxy doctor` reports whether the catalog is actually populated —
+`oratofusionproxy doctor` reports whether the catalog is actually populated —
 an empty one answers every query with nothing, which otherwise looks like
 success — and how long ago the table list was read from the tenant:
 

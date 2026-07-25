@@ -110,7 +110,7 @@ this way is actually like before wiring anything into a database.
 
 **If that works, all three requirements on this page are met** — the artefacts
 are deployed at the path you used, your account can run the report through the
-web service, and the endpoint is reachable. Point `ofpgproxy` at the same host
+web service, and the endpoint is reachable. Point `oratofusionproxy` at the same host
 and report path and it will work too.
 
 What the proxy adds on top: any Oracle client, not only a JVM one — SQLcl,
@@ -126,7 +126,7 @@ no role audit required:
 
 ```bash
 set -a; source .env; set +a
-./ofpgproxy doctor
+./oratofusionproxy doctor
 ```
 
 - `fusion.auth_and_report` **PASS** — the account authenticated, the report

@@ -5,7 +5,7 @@ and Kubernetes-style health probes. It's **off by default** — enable it with
 `--metrics-listen` / `OFPG_METRICS_LISTEN` (which requires `--oracle-listen`):
 
 ```bash
-./ofpgproxy \
+./oratofusionproxy \
   --oracle-listen 127.0.0.1:1521 --oracle-password changeme \
   --metrics-listen 127.0.0.1:9101 \
  
@@ -39,7 +39,7 @@ Oracle-wire frontend.
 | `orawire_protocol_timeouts_total` | counter | Protocol watchdog timeouts — a strict request/response transition (handshake, dblink round1→sync3→round2→fetch) the client never completed. See [Configuration → Protocol watchdog & diagnostics](configuration.md#protocol-watchdog--diagnostics). |
 | `orawire_diagnostic_bundles_total` | counter | Diagnostic `.zip` bundles written. |
 | `orawire_diagnostic_bundle_errors_total` | counter | Diagnostic bundle writes that failed (logged, never fatal). |
-| `orawire_compatibility_warnings_total` | counter | Connections whose resolved Oracle-wire compatibility profile is not fully verified (experimental/unsupported/unknown) — run `ofpgproxy doctor --profiles` for the full breakdown. No driver-name/conn-ID labels; check connection logs or a diagnostic bundle's `compat_profile`/`compat_support` fields for which client. |
+| `orawire_compatibility_warnings_total` | counter | Connections whose resolved Oracle-wire compatibility profile is not fully verified (experimental/unsupported/unknown) — run `oratofusionproxy doctor --profiles` for the full breakdown. No driver-name/conn-ID labels; check connection logs or a diagnostic bundle's `compat_profile`/`compat_support` fields for which client. |
 
 Example scrape:
 
@@ -64,7 +64,7 @@ A Prometheus scrape config stanza:
 
 ```yaml
 scrape_configs:
-  - job_name: ofpgproxy
+  - job_name: oratofusionproxy
     static_configs:
       - targets: ['127.0.0.1:9101']
 ```

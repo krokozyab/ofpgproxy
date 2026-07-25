@@ -17,10 +17,10 @@ Grab the archive for your platform from the [latest GitHub release](https://gith
 
 | Download | Contents |
 |---|---|
-| `ofpgproxy_<version>_darwin_arm64.zip` *(macOS)*, `ofpgproxy_<version>_windows_amd64.zip` *(Windows)*, or `ofpgproxy_<version>_linux_amd64.zip` *(Linux, incl. WSL)* | The binary and `.env.example` |
-| `ofpgproxy-catalog_<version>.zip` *(optional)* | A pre-built Fusion catalog. Only worth taking if you'd rather not have the proxy build its own — it fills one on demand either way. See [Metadata catalog](metadata.md). |
+| `oratofusionproxy_<version>_darwin_arm64.zip` *(macOS)*, `oratofusionproxy_<version>_windows_amd64.zip` *(Windows)*, or `oratofusionproxy_<version>_linux_amd64.zip` *(Linux, incl. WSL)* | The binary and `.env.example` |
+| `oratofusionproxy-catalog_<version>.zip` *(optional)* | A pre-built Fusion catalog. Only worth taking if you'd rather not have the proxy build its own — it fills one on demand either way. See [Metadata catalog](metadata.md). |
 
-On macOS, run `chmod +x ofpgproxy` if Finder dropped the executable bit, and `xattr -d com.apple.quarantine ofpgproxy` to clear the Gatekeeper flag on first run.
+On macOS, run `chmod +x oratofusionproxy` if Finder dropped the executable bit, and `xattr -d com.apple.quarantine oratofusionproxy` to clear the Gatekeeper flag on first run.
 
 Verify the download (optional but recommended) — `SHA256SUMS` is on the same release page:
 
@@ -63,20 +63,20 @@ Full reference: [Configuration](configuration.md) (every flag/env var, including
 
 ## 4. (Optional) Validate before launching
 
-`./ofpgproxy doctor` checks your `.env` and `--oracle-listen` config, opens
+`./oratofusionproxy doctor` checks your `.env` and `--oracle-listen` config, opens
 the metadata catalog and reports whether it is populated, and — unless you
 pass `--offline` — runs one real, bounded `SELECT 1 FROM DUAL` through Fusion,
 all without starting the proxy itself. Same env vars and flags as step 5:
 
 ```bash
 set -a; source .env; set +a
-./ofpgproxy doctor --offline
+./oratofusionproxy doctor --offline
 ```
 
 A clean run prints `Result: PASS`. Warnings are usually fine — an empty
 catalog on a first run is expected, and unverified client/dialect combinations
 are flagged rather than hidden. See
-[Configuration → `ofpgproxy doctor`](configuration.md#ofpgproxy-doctor) for
+[Configuration → `oratofusionproxy doctor`](configuration.md#oratofusionproxy-doctor) for
 every flag and what each check does.
 
 ## 5. Launch
@@ -85,7 +85,7 @@ every flag and what each check does.
 
 ```bash
 set -a; source .env; set +a
-./ofpgproxy
+./oratofusionproxy
 ```
 
 ### Windows (PowerShell)
@@ -96,7 +96,7 @@ PowerShell doesn't source `.env` files natively — load the variables first, th
 Get-Content .env | ForEach-Object {
   if ($_ -match '^\s*([^#=]+)=(.*)$') { Set-Item "Env:$($Matches[1].Trim())" $Matches[2].Trim() }
 }
-.\ofpgproxy.exe
+.\oratofusionproxy.exe
 ```
 
 Expected output:
@@ -170,7 +170,7 @@ see [Connecting clients](clients.md).
 
 ## What's next
 
-- **[`ofpgproxy doctor --profiles`](configuration.md#ofpgproxy-doctor)** — see exactly which Oracle client/dialect/feature combinations this build has verified.
+- **[`oratofusionproxy doctor --profiles`](configuration.md#oratofusionproxy-doctor)** — see exactly which Oracle client/dialect/feature combinations this build has verified.
 - **[Testing & verification](testing.md)** — what is actually verified, against which Oracle versions and clients.
 - **[Troubleshooting](troubleshooting.md)** — for the first time you hit an `ORA-…` message.
 - **[Configuration](configuration.md)** — every flag and env var the proxy honours.

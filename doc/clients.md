@@ -59,10 +59,10 @@ transparently — no client-side configuration needed.
 
 Exactly how far each client/dialect is verified — down to specific types,
 bind variables, NULL handling, and column-count limits — is graded honestly
-(not aspirationally) against the same registry `ofpgproxy doctor --profiles`
+(not aspirationally) against the same registry `oratofusionproxy doctor --profiles`
 reads; run that command against your own build for the full, evidence-graded
 breakdown. None of this is a rejection — an unverified path just isn't
-guaranteed, and `ofpgproxy doctor` will warn (never block) when a connection
+guaranteed, and `oratofusionproxy doctor` will warn (never block) when a connection
 resolves to one.
 
 **Still unsupported:** actually *enabling* ANO's native encryption
@@ -122,7 +122,7 @@ Ordinary `SELECT`s work. Two things behave differently from a real database:
 - A write (DML/DDL) is refused with `ORA-16000`.
 
 Verified scope for a direct `sqlplus` session is narrower than "ordinary
-SELECTs" suggests — run `ofpgproxy doctor --profiles` for the exact,
+SELECTs" suggests — run `oratofusionproxy doctor --profiles` for the exact,
 evidence-graded breakdown before relying on wide multi-column results, bind
 variables, or NULL handling in a script.
 
@@ -161,7 +161,7 @@ same network) — the proxy doesn't do any of that itself.
 
 `dblink` is the one dialect verified for **wide results (>255 columns)** —
 confirmed against a real 288-column, all-NUMBER table capture. Run
-`ofpgproxy doctor --profiles` for the full per-feature grading.
+`oratofusionproxy doctor --profiles` for the full per-feature grading.
 
 For an EBS R12 database specifically — `tnsnames.ora`, which database versions
 are covered, why no Database Gateway is involved, and the DBA-facing notes —

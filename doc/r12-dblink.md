@@ -45,7 +45,7 @@ Typical arrangements:
 The proxy does none of this for you. Bind it accordingly:
 
 ```bash
-./ofpgproxy \
+./oratofusionproxy \
   --oracle-listen 0.0.0.0:1521 --oracle-password 'changeme' \
   --fusion-host fa-xxxx.oraclecloud.com --auth=jwt-assertion
 ```
@@ -165,4 +165,4 @@ way.
   Fusion answered. The table name is wrong, or that object isn't in your
   tenant.
 - Anything else: [Troubleshooting](troubleshooting.md) decodes the error shapes,
-  and `ofpgproxy doctor` proves the Fusion side independently of the link.
+  and `oratofusionproxy doctor` proves the Fusion side independently of the link.

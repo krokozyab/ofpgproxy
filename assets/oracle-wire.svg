@@ -17,7 +17,7 @@
 
   <!-- clients: interactive tools -->
   <rect class="b" x="40" y="48" width="320" height="118"/>
-  <text class="t" x="62" y="84">sqlplus · SQLcl</text>
+  <text class="t" x="62" y="84">SQLcl · DBeaver</text>
   <text class="t" x="62" y="114">SQL Developer · ojdbc</text>
   <text class="t" x="62" y="144">python-oracledb</text>
 
@@ -35,7 +35,7 @@
 
   <!-- proxy -->
   <rect class="b" x="520" y="78" width="290" height="240"/>
-  <text class="t" x="546" y="130">ofpgproxy</text>
+  <text class="t" x="546" y="130">oratofusionproxy</text>
   <text class="s" x="546" y="160">(single binary)</text>
   <text class="t" x="546" y="240">listens :1521</text>
   <text class="s" x="546" y="270">read-only</text>
