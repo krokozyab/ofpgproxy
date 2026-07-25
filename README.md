@@ -26,19 +26,19 @@ Oracle Fusion Cloud's BI Publisher is the only sanctioned read-path out of a Saa
 **`oratofusionproxy` sits between them and makes them agree.**
 
 ```text
-                    Oracle clients
+                   Oracle clients
        (SQLcl, DBeaver, SQL Developer, ojdbc,
-         python-oracledb, another database's dblink)
+     python-oracledb, another database's dblink)
                           │
                           │  Oracle Net (TNS/TTC)
                           ▼
-                  ┌───────────────┐
-                  │ oratofusionproxy │
-                  └───────────────┘
+                ┌──────────────────┐
+                │ oratofusionproxy │
+                └──────────────────┘
                           │
                           │  SOAP (BI Publisher · RP_ARB.xdo)
                           ▼
-                 Oracle Fusion Cloud tenant
+             Oracle Fusion Cloud tenant
 ```
 
 ### 🎯 Native Oracle, no rewrite required
