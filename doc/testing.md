@@ -93,6 +93,7 @@ against real captures:
 | `LONG` | Streaming path, one row per fetch round |
 | `CLOB` | Native LOB locator and descriptor; length counted in UTF-16 code units, so text outside the BMP (emoji, rare CJK) reports the same length Oracle reports |
 | `BLOB` | Locator read path |
+| `XMLTYPE` | Carried as text, described as `CLOB` — same path, not separately exercised |
 | `NULL` in any position | Single-column, mixed, all-`NULL` rows, and zero-row results |
 
 The UTF-16 detail is not pedantry: getting it wrong truncates every CLOB that
@@ -140,8 +141,13 @@ Stated plainly, so nobody discovers these the hard way:
 - **Thick-client Advanced Networking (ANO/native encryption).** `sqlplus` and
   other OCI clients work in the configurations listed above; a client
   *forcing* Oracle Advanced Networking negotiation is not supported.
-- **Object types, collections, `XMLTYPE`, `REF CURSOR`, PL/SQL blocks.** Not
-  implemented — scalar `SELECT` result sets only.
+- **Object-relational shapes: object types, collections (`VARRAY`, nested
+  tables), `REF CURSOR`, PL/SQL blocks.** These never reach the proxy: BI
+  Publisher hands back a rendered report — flat rows of text — so there is no
+  representation for them to arrive in, and no session for a PL/SQL block to
+  run in. This is the shape of the sanctioned read-path, not a gap in the
+  implementation. (`XMLTYPE` *does* come through, carried as text and described
+  as `CLOB`.)
 - **Database-link teardown under host-level NAT.** When the proxy runs
   outside the container network of the initiating Oracle server, the
   redial the Oracle connection pool performs after a link is closed can be
