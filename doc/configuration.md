@@ -181,7 +181,7 @@ FUSION_SOAP_CONCURRENCY=4 make run
 
 Sizing guide:
 
-- **`1`** — conservative. Default. Use for batch / unattended runs (dbt, scheduled exports) where wall-clock matters less than not annoying the tenant.
+- **`1`** — conservative. Default. Use for batch / unattended runs (scheduled exports, reconciliation jobs) where wall-clock matters less than not annoying the tenant.
 - **`2`–`4`** — typical for interactive use. Single SSO/password session, BIP usually treats parallel calls under the same session-cookie as the same logical user.
 - **`>4`** — test on your own tenant first. Some Fusion releases throttle hard above small concurrency; you may see intermittent `WSM-07501` / login refusals before any benefit shows up.
 
