@@ -43,17 +43,17 @@ uploaded the catalog may not have used the default at all. **A wrong path
 fails every query**, and it fails in a way that looks like a permission
 problem, so check this before suspecting roles.
 
-Uploading into the catalog is an authoring action: the account doing it needs
-BI authoring rights (a job role carrying the *BI Author* duty, or a BI
-administrator). One-off, and it does not have to be the account the proxy later
-runs as.
+Uploading into the catalog needs whatever privileges your tenant requires to
+publish a BI Publisher report there. One-off, and it does not have to be the
+account the proxy later runs as.
 
 ## 2. The account the proxy uses must be able to run that report
 
 This is the one people miss. The proxy authenticates as whoever you configure
-in `--auth` and runs the report as that user, so that account needs the right
-to **execute a BI Publisher report through the web service** — a job role
-carrying the *BI Consumer* duty is the usual answer.
+in `--auth` and runs the report as that user, so the requirement is simply:
+**that account must have the privileges to run this BI Publisher report
+through the web service.** Whatever your tenant's role model calls that, it is
+the only thing being asked for.
 
 What it does **not** need:
 
@@ -65,8 +65,8 @@ What it does **not** need:
   tenant, and nothing here needs one.
 - **No separate data model per table.** One report serves everything.
 
-Role names differ between tenants and pillars, so rather than matching a
-string, **verify it directly** — see below.
+Rather than chasing role names — they differ between tenants and pillars —
+**verify it directly**: see below.
 
 ## 3. The SOAP endpoint must be reachable from wherever the proxy runs
 
@@ -120,9 +120,9 @@ another Oracle database reading Fusion over its own
 
 ## Verify all three in one command
 
-Do not guess at role names. `doctor` runs a real, bounded
-`SELECT 1 FROM DUAL` through your tenant, using the same config the proxy
-will:
+`doctor` runs a real, bounded `SELECT 1 FROM DUAL` through your tenant, using
+the same config the proxy will. If it passes, the account has what it needs —
+no role audit required:
 
 ```bash
 set -a; source .env; set +a
