@@ -25,7 +25,7 @@ Flags always win over environment variables. A few parameters are available only
 | Flag | Env | Default | Description |
 |---|---|---|---|
 | `--fusion-host` | `FUSION_HOST` | — | Fusion tenant hostname. **No protocol, no path.** Example: `fa-xxxx.oraclecloud.com`. |
-| `--report-path` | `FUSION_SQL_REPORT_PATH` | `/Custom/Financials/RP_ARB.xdo` | BI Publisher report absolute path. Most tenants use `/Custom/sql/RP_ARB.xdo`. |
+| `--report-path` | `FUSION_SQL_REPORT_PATH` | `/Custom/Financials/RP_ARB.xdo` | BI Publisher report absolute path. Tenants differ — use whatever path your catalog upload produced. See [Fusion prerequisites](fusion-prerequisites.md). |
 | `--metadata-cache` | — | `metadata-cache.db` beside the binary | Writable catalog the proxy fills from your tenant on demand. See [Metadata catalog](metadata.md). |
 | `--metadata-path` | — | — | An existing catalog file. On its own it is used **read-only**; with `--metadata-cache` it seeds the cache once and is never written to. |
 | `--metadata-refresh` | — | `0s` (off) | Re-read the tenant's table list on a timer. `SIGHUP` always triggers one. |
@@ -106,13 +106,13 @@ same `ofpgproxy` binary with `doctor` as its **first** argument; every other
 flag and env var (`FUSION_HOST`, `FUSION_AUTH_TYPE`, `--metadata-path`, ...)
 is identical to the server's own — nothing doctor-specific to set up beyond
 whatever you'd already pass to run the proxy itself. It never starts a
-PG-wire or Oracle-wire listener.
+Oracle-wire listener.
 
 ```bash
 # Same env vars and --metadata-path you'd use to actually run the proxy
 # (see the Quick Start above) — doctor reads them exactly the same way.
 FUSION_HOST=fa-xxxx.oraclecloud.com FUSION_AUTH_TYPE=sso \
-  ./ofpgproxy doctor --offline --metadata-path ./metadata.db
+  ./ofpgproxy doctor --offline
 ```
 
 ```bash
@@ -147,7 +147,7 @@ The proxy itself does **not** load `.env` automatically — source it before lau
 
 ```bash
 set -a; source .env; set +a
-./ofpgproxy --metadata-path ./metadata.db
+./ofpgproxy
 ```
 
 A `make run`–style wrapper script that loads `.env` and passes `--metadata-path` is typically two lines — see [Quick Start](quickstart.md) for an example.
@@ -287,6 +287,38 @@ mkdir -p /var/log/ofpgproxy/diagnostics
 `orawire-<timestamp>-conn-<id>-<trigger>.zip` in the diagnostic directory
 matching the log line's own `diagnostic_bundle=` path, and attach it as-is —
 see [Troubleshooting](troubleshooting.md) for the matching log line shape.
+
+## `ofpgproxy warm-metadata`
+
+Fills the metadata catalog from your tenant in one go, then exits — the
+in-process equivalent of an offline export. Everything it fetches, the proxy
+would otherwise fetch on demand as clients ask for it; this is for when you'd
+rather pay that cost up front, or want a populated cache to copy to another
+machine.
+
+**It is thousands of BI Publisher calls.** On a shared tenant, throttle it and
+watch it. It is a subcommand rather than a server flag precisely so it can't be
+triggered by a proxy start.
+
+```bash
+ofpgproxy warm-metadata \
+  --metadata-cache ~/.ofpgproxy/metadata-cache.db \
+  --fusion-host fa-xxxx.oraclecloud.com \
+  --page-size 500 --interval 2s
+```
+
+| Flag | Default | Description |
+|---|---|---|
+| `--metadata-cache` | `metadata-cache.db` beside the binary | Cache to fill. Created if absent. |
+| `--metadata-path` | — | Optional existing catalog to seed the cache from before fetching. |
+| `--page-size` | `500` | Rows per BI Publisher call. Bigger pages mean proportionally fewer calls. |
+| `--interval` | `0s` | Minimum delay between calls. Use `2s` or more against a tenant with real users on it. |
+
+It also takes the same `--fusion-host` / `--report-path` / auth flags as the
+server. Progress prints per page; Ctrl-C stops after the current page and keeps
+everything already written, so re-running resumes rather than starting over.
+
+Writes are idempotent — running it twice does not duplicate rows.
 
 ## SQL Translator playground
 

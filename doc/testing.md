@@ -16,7 +16,7 @@ partially covered, it says so, and the gaps are listed at the end.
 |---|---|
 | Backend | Oracle Fusion Cloud — BI Publisher universal report (`RP_ARB.xdo`) |
 | Oracle Database as dblink initiator | **19c** (19.3.0.0, Enterprise Edition) |
-| Oracle Database as dblink initiator | **26ai** (Oracle Database Free) |
+| Oracle Database as dblink initiator | **26ai** (Oracle Database Free) — this is the 23ai/26ai protocol generation; the same dialect covers 23ai, exercised here with 26ai |
 | Thin driver (Python) | **python-oracledb 4.0.1**, thin mode |
 | Thin driver (Java) | **ojdbc11 26.1.0** — the driver behind DBeaver, SQL Developer, SQLcl |
 | OCI / thick client | **Oracle Instant Client 23.3** (`sqlplus` 23.0.0.0.0) |
@@ -111,11 +111,13 @@ contains an astral character, and only for those rows.
 - **Statement reuse** — re-execute of an already-described cursor, and
   fetch-by-cursor-id, so IDE workflows (run a query, run a count, scroll back
   through the first grid) behave.
-- **Oracle SQL passes through unchanged.** Queries against Fusion tables are
-  sent to the backend as Oracle SQL — `DECODE`, `(+)` outer joins, `BITAND`,
-  `ROWNUM`, analytic functions and the rest are evaluated by Oracle itself,
-  not reinterpreted by the proxy. There is no dialect to learn and no rewrite
-  layer to be surprised by on the data path.
+- **No dialect translation.** Queries against Fusion tables are sent as the
+  Oracle SQL you wrote — `DECODE`, `(+)` outer joins, `BITAND`, `ROWNUM`,
+  analytic functions and the rest are evaluated by Oracle itself, not
+  reinterpreted by the proxy. The one modification the proxy may make is
+  appending a row window (`OFFSET … ROWS FETCH NEXT … ROWS ONLY`) to page a
+  GUI client's unbounded query; a statement that already limits its own rows is
+  never touched. Nothing rewrites your expressions.
 - **Data dictionary** — `ALL_*` / `USER_*` / `DBA_*` queries are answered
   locally from the cached metadata database rather than sent to Fusion, so
   connecting an IDE costs no backend calls. That local layer is where a small

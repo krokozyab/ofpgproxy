@@ -54,7 +54,7 @@ Two warnings. First, `--oracle-password` is the **only** credential on that
 listener — obviously not literally `changeme`: if the port is reachable from
 more than the database host, that value is your entire access control. Second,
 a long-lived service needs an auth mode that does not involve a browser: see [Authentication](auth.md) for
-`token-file`, `client-credentials` and `jwt-assertion`.
+`token-file`, `token-refresh`, `client-credentials` and `jwt-assertion`.
 
 ## 2. Add a TNS entry (or inline the descriptor)
 
@@ -124,7 +124,7 @@ CREATE SYNONYM fusion_ap_invoices FOR ap_invoices_all@fusion_saas;
 | EBS DB version | Status |
 |---|---|
 | **19c** | Verified live — the common R12.2 and R12.1.3 platform today |
-| **23ai / 26ai** | Verified live |
+| **23ai / 26ai** | One protocol generation; verified live with 26ai |
 | 12.1.0.2, 12.2.0.1, 18c, 11.2.0.4 | **Not tested.** They take the older of the two protocol generations the proxy implements, so there is a fair chance they work as-is — but nobody has run them, and one byte of version difference has broken a result shape before |
 
 Check yours before planning around it:

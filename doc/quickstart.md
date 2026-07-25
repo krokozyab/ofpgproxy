@@ -8,8 +8,8 @@ database's `dblink`.
 
 - macOS (Apple Silicon), Windows (x86_64), or Linux (x86_64).
 - Chrome / Chromium on `PATH` (only needed for SSO auth mode).
-- A Fusion Cloud tenant with the `RP_ARB.xdo` BI Publisher report deployed (download from [krokozyab/ofjdbc/otbireport](https://github.com/krokozyab/ofjdbc/tree/master/otbireport)) — typically under `/Custom/sql/RP_ARB.xdo` or `/Custom/Financials/RP_ARB.xdo`.
-- An Oracle client — see the [full client recipes](clients.md). **SQLcl** is the easiest to get (a single download, needs only a Java runtime); `sqlplus` and SQL Developer need a full Oracle Instant Client install separately.
+- A Fusion Cloud tenant with the `RP_ARB.xdo` BI Publisher report deployed (download from [krokozyab/ofjdbc/otbireport](https://github.com/krokozyab/ofjdbc/tree/master/otbireport)) — `/Custom/Financials/RP_ARB.xdo` is the proxy's default, but use whatever path yours ended up at; see [Fusion prerequisites](fusion-prerequisites.md).
+- An Oracle client — see the [full client recipes](clients.md). **SQLcl** is the easiest to get: a single download, needs only a Java runtime. SQL Developer and DBeaver work out of the box too — they use the pure-Java ojdbc thin driver, so no Oracle Instant Client is involved. Only `sqlplus` needs one.
 
 ## 2. Get the artefacts
 
@@ -44,13 +44,13 @@ auth mode:
 ```
 # Tenant
 FUSION_HOST=fa-xxxx.oraclecloud.com
-FUSION_SQL_REPORT_PATH=/Custom/sql/RP_ARB.xdo
+FUSION_SQL_REPORT_PATH=/Custom/Financials/RP_ARB.xdo
 
 # Auth mode: sso | password | token-file | token-refresh | client-credentials | jwt-assertion
 FUSION_AUTH_TYPE=sso
 ```
 
-Pick which wire(s) to turn on — both can run from the same process:
+Turn on the Oracle listener — the proxy will not accept clients without it:
 
 ```
 # Oracle listener (SQLcl, DBeaver, SQL Developer, ojdbc, dblink):
@@ -139,11 +139,12 @@ The three parts of that connect string:
   to** in `.env` (step 3). A wrong value is rejected at login.
 - **`fusion`** after the `/` — the service name; any value works, it is ignored.
 
-SQL Developer connects the same way once you've installed a full Oracle
-Instant Client (a separate download from Oracle) — see
+SQL Developer and DBeaver connect the same way with no extra install — both
+use the pure-Java ojdbc thin driver. See
 [Connecting Oracle clients](clients.md#oracle-clients-sqlcl-dbeaver-sql-developer)
-for those connection fields and `dblink` setup. `sqlplus` works too, but SQLcl
-above is its modern replacement and the easier one to get running.
+for their connection fields and `dblink` setup. `sqlplus` works too, but it is
+the one client that does need a full Oracle Instant Client, and SQLcl above is
+its modern replacement.
 
 ### DBeaver
 

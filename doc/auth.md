@@ -24,7 +24,7 @@ All actual authentication against Oracle happens on the Fusion side using whiche
 ```bash
 FUSION_HOST=fa-xxxx.oraclecloud.com \
 FUSION_AUTH_TYPE=sso \
-./ofpgproxy --metadata-path ./metadata.db
+./ofpgproxy
 ```
 
 ### How it works
@@ -59,7 +59,7 @@ Basic auth with a static Fusion user:
 FUSION_AUTH_TYPE=password \
 FUSION_USER=bip.integration \
 FUSION_PASSWORD=... \
-./ofpgproxy --metadata-path ./metadata.db
+./ofpgproxy
 ```
 
 The credentials are sent on every SOAP call directly — no browser, no refresh logic. Simple but less common on modern tenants that require SAML/OIDC.
@@ -76,7 +76,7 @@ For out-of-band-authenticated setups:
 ./ofpgproxy \
   --auth token-file \
   --auth-token-file /run/secrets/fusion-token \
-  --metadata-path ./metadata.db
+ 
 ```
 
 - The file contents are read on every SOAP call, so you can rotate tokens externally without restarting the proxy.
@@ -102,7 +102,7 @@ tokens against Fusion's token-relay endpoint and refreshes automatically
 ```bash
 FUSION_AUTH_TYPE=token-refresh \
 FUSION_REFRESH_TOKEN=... \
-./ofpgproxy --fusion-host fa-xxxx.oraclecloud.com --metadata-path ./metadata.db
+./ofpgproxy --fusion-host fa-xxxx.oraclecloud.com
 ```
 
 The refresh token is the credential you supply; the initial access token is
@@ -120,7 +120,7 @@ FUSION_AUTH_TYPE=client-credentials \
 FUSION_OAUTH_TOKEN_URL=https://<idcs-host>/oauth2/v1/token \
 FUSION_OAUTH_CLIENT_ID=... FUSION_OAUTH_CLIENT_SECRET=... \
 FUSION_OAUTH_SCOPE=... \
-./ofpgproxy --fusion-host fa-xxxx.oraclecloud.com --metadata-path ./metadata.db
+./ofpgproxy --fusion-host fa-xxxx.oraclecloud.com
 ```
 
 > ⚠️ A client-credentials token is **app-only** — it carries no user identity.
@@ -142,7 +142,7 @@ FUSION_JWT_SUBJECT=svc.reporting@corp \
 FUSION_JWT_KEY_FILE=/run/secrets/assertion-key.pem \
 FUSION_JWT_KEY_ID=<kid> \
 FUSION_JWT_AUDIENCE=https://<idp-host>/ \
-./ofpgproxy --fusion-host fa-xxxx.oraclecloud.com --metadata-path ./metadata.db
+./ofpgproxy --fusion-host fa-xxxx.oraclecloud.com
 ```
 
 Setup (a **tenant-admin** task):
@@ -165,7 +165,7 @@ assertion is.
 
 Today one proxy instance = one Fusion tenant. To front multiple tenants, run one proxy per tenant on different ports. Each proxy holds its own SSO session or credentials.
 
-Per-connection authentication (tenant picked by the PG client's `user` / `dbname`) is on the roadmap; until it ships, the one-per-tenant split is the clean path.
+Per-connection authentication (tenant picked by the client's username or service name) is on the roadmap; until it ships, the one-per-tenant split is the clean path.
 
 ---
 

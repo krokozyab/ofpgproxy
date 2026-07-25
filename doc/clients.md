@@ -107,11 +107,19 @@ Same credentials as SQLcl above — `FUSION` is the recommended username (any
 value authenticates, but IDE object trees only line up with the single logical
 schema every object is reported under when you connect as `FUSION`), `changeme`
 stands for your `--oracle-password` / `ORACLE_WIRE_PASSWORD` value, service
-name after `/` is arbitrary. Ordinary `SELECT`s and `DBMS_OUTPUT`-free
-anonymous PL/SQL blocks that only run session no-ops (`ALTER SESSION`,
-`COMMIT`/`ROLLBACK`) work; a write (DML/DDL) is refused with `ORA-16000`, and
-sqlplus's `DESCRIBE` command is not supported (it returns `ORA-03001` — column
-metadata is available through catalog views / the IDE tree instead).
+name after `/` is arbitrary.
+
+Ordinary `SELECT`s work. Two things behave differently from a real database:
+
+- **The `DESCRIBE` command** (sqlplus's own, a dedicated protocol call) is not
+  implemented and returns `ORA-03001`. Query `ALL_TAB_COLUMNS` instead — that
+  is answered locally and instantly.
+- **PL/SQL is never executed.** Nothing on the other side can run it: BI
+  Publisher executes a report, not a block. Statements the client marks as
+  non-queries — `ALTER SESSION`, `COMMIT`, `ROLLBACK` and anonymous blocks —
+  are *acknowledged* so the session keeps working, but their body does not run.
+  Don't send a block expecting side effects.
+- A write (DML/DDL) is refused with `ORA-16000`.
 
 Verified scope for a direct `sqlplus` session is narrower than "ordinary
 SELECTs" suggests — run `ofpgproxy doctor --profiles` for the exact,
@@ -128,7 +136,7 @@ report per query:
 
 ```sql
 CREATE DATABASE LINK fusion_link
-  CONNECT TO FUSION IDENTIFIED BY changeme
+  CONNECT TO "FUSION" IDENTIFIED BY "changeme"
   USING '(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=<proxy-host>)(PORT=1521))
           (CONNECT_DATA=(SERVICE_NAME=fusion)))';
 
@@ -137,9 +145,14 @@ FROM   gl_je_lines@fusion_link
 WHERE  ROWNUM <= 5;
 ```
 
-Same credential rules as above: `IDENTIFIED BY changeme` must be **your**
+Same credential rules as above: the `IDENTIFIED BY` value must be **your**
 `--oracle-password` / `ORACLE_WIRE_PASSWORD` value; the `CONNECT TO` username
 is not validated.
+
+**Keep the double quotes.** Without them Oracle upper-cases the password when
+it stores the link, so a lowercase `--oracle-password` turns into `CHANGEME` on
+the wire and every use of the link fails with `ORA-01017` — with nothing in the
+statement to suggest why.
 
 Read-only, same as every other Oracle-wire client — any DML over the link is
 rejected. The proxy's own network reachability from wherever the real Oracle
@@ -163,8 +176,9 @@ authenticates but leaves the Tables/Views tree empty), Password = your
 `--oracle-listen`, service name anything.
 
 - Tables appear under the single logical schema `FUSION`.
-- Column lists, `DESCRIBE` and autocomplete are answered from the local
-  metadata catalog, so tree browsing costs no BI Publisher calls.
+- The tree, column lists and autocomplete are answered from the local metadata
+  catalog (the client asks `ALL_TAB_COLUMNS` and friends), so browsing costs no
+  BI Publisher calls.
 - Result grids paginate: the first page (default 200 rows) arrives in seconds
   even on large tables, and more pages fetch as you scroll. Adjust with
   `--foreign-batch-size`.

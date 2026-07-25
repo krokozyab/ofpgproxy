@@ -45,7 +45,7 @@ Oracle Fusion Cloud's BI Publisher is the only sanctioned read-path out of a Saa
 
 Point existing Oracle tooling straight at Fusion — nothing to port:
 *   **SQLcl, DBeaver, SQL Developer** — point them at Fusion and run your `SELECT`s, no rewrite. Tree navigation, autocomplete and result grids intact. (`sqlplus` works too.)
-*   **A real Oracle database's own `dblink`** — reconciliation scripts, migration validation, anything already written to query a remote Oracle schema keeps working unchanged. Verified from both 19c and 23ai/26ai initiators.
+*   **A real Oracle database's own `dblink`** — reconciliation scripts, migration validation, anything already written to query a remote Oracle schema keeps working unchanged. Verified live from a 19c initiator and from the 23ai/26ai protocol generation (exercised with 26ai).
 *   **ojdbc / python-oracledb** — service code that already speaks the Oracle driver connects without touching a line.
 *   *Read-only by construction — BI Publisher can't write, so DML is rejected regardless of client.*
 
@@ -100,7 +100,7 @@ The data-dictionary catalog needs no setup: the proxy keeps its own cache next t
 * 🔌 **Zero custom glue.** No specialized SDKs or custom integrations — if your tool speaks to an Oracle database, it already speaks to Fusion.
 * 🔶 **The real wire protocol (TNS/TTC).** SQLcl, DBeaver, SQL Developer, ojdbc, python-oracledb and a real Oracle database's own `dblink` connect over the actual protocol bytes — a from-scratch implementation, not an emulation layer bolted onto a driver.
 * 📚 **A catalog that builds itself.** Schema browsing is answered locally from a DuckDB catalog the proxy fills from your tenant on demand, so an IDE's tree never costs a slow round trip twice.
-* 🌊 **Memory-efficient streaming.** Results flow through the proxy as they arrive. It doesn't buffer massive datasets, keeping its footprint tiny.
+* 🌊 **Paged, not piled up.** GUI clients get their results in pages, so a wide table's first screen arrives in seconds and the proxy holds one page at a time. An unbounded query from a code client is one backend call and is held whole — bound it with `ROWNUM` and the footprint stays small.
 * 🔒 **Read-only by design.** BI Publisher can't write, and neither will the proxy. No accidental DML. Sleep soundly.
 * 🩺 **Built-in `doctor`.** `ofpgproxy doctor` validates config, catalog health and Fusion reachability — and reports exactly which Oracle client/dialect combinations this build has verified — before you ever point a real client at it. [Details](doc/configuration.md#ofpgproxy-doctor).
 

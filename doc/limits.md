@@ -33,8 +33,8 @@ Raise it to 2–4 for interactive use. Above 4, test on your own tenant before
 committing; some releases throttle hard and you will see `WSM-07501` or login
 refusals before you see a speedup.
 
-Data-dictionary queries (an IDE's schema tree, autocomplete, `DESCRIBE`) never
-touch this gate — they are answered from the local catalog.
+Data-dictionary queries (an IDE's schema tree, autocomplete, column lists)
+never touch this gate — they are answered from the local catalog.
 
 ## Result size
 
@@ -46,13 +46,21 @@ touch this gate — they are answered from the local catalog.
 | Bytes in one FETCH response | 16 MiB | hard cap |
 | Inbound TNS packet | 16 MiB | hard cap |
 
-The two hard caps are not tuneable: they bound what a client can make the
-proxy allocate. Hitting them is invisible — the client simply fetches again.
+The three hard caps are not tuneable: they bound what a client can make the
+proxy allocate. Hitting the row and byte caps is invisible — the client simply
+fetches again.
+
+**Rows are paged, not streamed end to end.** Each backend call reads and parses
+one complete BI Publisher response before the proxy hands rows to the client.
+For a GUI client that means one page at a time (200 rows by default). For a
+code client, `sqlplus` or `dblink`, an unbounded query is one call — so that
+whole result is materialised once, in the proxy and in your client. This is the
+reason to bound big queries, and the reason the row window above matters.
 
 **A practical ceiling for a single query is tens of thousands of rows.**
-Nothing in the proxy stops more, and rows stream rather than buffer, but the
-whole result still passes through one BI Publisher rendering, and Fusion's own
-report timeouts become the binding constraint long before the proxy's do. If
+Nothing in the proxy stops more, but the whole result passes through one BI
+Publisher rendering, and Fusion's own report timeouts become the binding
+constraint long before the proxy's do. If
 you need millions of rows, extract them in ranges (by date, by ledger, by ID
 band) rather than in one statement.
 

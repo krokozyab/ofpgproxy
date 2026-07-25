@@ -11,10 +11,14 @@ different sets of names meet in it, which is worth getting straight up front:
   `ALL_TABLES`, `ALL_TAB_COLUMNS`, `ALL_OBJECTS`, `USER_*`, `DBA_*`, `DUAL`.
   Those are views over `cached_*`, computed locally.
 
-So an IDE's schema tree, autocomplete and `DESCRIBE` resolve without a BI
+So an IDE's schema tree, autocomplete and column lists resolve without a BI
 Publisher round trip each. The catalog also gives every result column its real
-Oracle type and width, which is how `TIMESTAMP`, `RAW` and `CLOB` describe
-correctly rather than being guessed from the values.
+Oracle type and width, which is how `TIMESTAMP`, `RAW` and `CLOB` are described
+correctly in query results rather than guessed from the values.
+
+(One thing it does not cover: sqlplus's own `DESCRIBE` command, which is a
+separate protocol call the proxy does not implement — see
+[Connecting clients](clients.md#sqlplus).)
 
 ## It fills itself
 
