@@ -51,13 +51,13 @@ Point existing Oracle tooling straight at Fusion — nothing to port:
 
 ## 💡 Why you need this
 
-* **Reuse the Oracle stack you already have:** reconcile an EBS (or any Oracle) database against Fusion straight over its own `dblink`, pull Fusion data into OIC flows and existing PL/SQL, run your `sqlplus` scripts and SQL Developer habits — all unchanged. Cut out the staging tables, nightly exports, and throwaway integrations you'd otherwise build just to move the data around.
+* **Reuse the Oracle stack you already have:** reconcile an EBS (or any Oracle) database against Fusion straight over its own `dblink` — [step-by-step for R12](doc/r12-dblink.md), and no Database Gateway or `dg4odbc` involved — pull Fusion data into OIC flows and existing PL/SQL, run your `sqlplus` scripts and SQL Developer habits — all unchanged. Cut out the staging tables, nightly exports, and throwaway integrations you'd otherwise build just to move the data around.
 * **Stop fighting the reporting bottleneck:** query the tenant directly from the client you already have, instead of waiting weeks for a custom pipeline or authoring a BI Publisher report per question.
 * **Keep the tools you already know:** every Oracle client you own connects natively. Nothing new to learn, no SDK, no custom integration.
 
 ## 🚀 60-Second Magic Start
 
-**Prerequisite:** Deploy the `RP_ARB.xdo` BI Publisher report to your Oracle Fusion tenant. You can download the report catalog from [krokozyab/ofjdbc/otbireport](https://github.com/krokozyab/ofjdbc/tree/master/otbireport).
+**Prerequisite:** Deploy the `RP_ARB.xdo` BI Publisher report to your Oracle Fusion tenant (catalog: [krokozyab/ofjdbc/otbireport](https://github.com/krokozyab/ofjdbc/tree/master/otbireport)) and make sure the account you'll authenticate as can run it. Three requirements in total, all inside Fusion — **[Fusion prerequisites](doc/fusion-prerequisites.md)** spells them out and shows how to verify all three with one command.
 
 ```bash
 # 1. Grab the binary from the latest release:
@@ -95,6 +95,9 @@ The data-dictionary catalog needs no setup: the proxy keeps its own cache next t
 | 🤝 [**Connecting clients**](doc/clients.md) | Recipes for `sqlplus`, SQL Developer, SQLcl, `dblink`, ojdbc, python-oracledb |
 | ⚙️ [**Configuration**](doc/configuration.md) | Flags, env vars, ports, `ofpgproxy doctor`, and signals |
 | 🔑 [**Authentication**](doc/auth.md) | SSO, password, token-file, and OAuth (refresh / client-credentials / JWT-assertion) modes |
+| 🏛️ [**Fusion prerequisites**](doc/fusion-prerequisites.md) | What must exist in the tenant: the report, the account's rights, the endpoint — and how to verify them |
+| 🔗 [**EBS R12 over `dblink`**](doc/r12-dblink.md) | Copy-paste recipe for reading Fusion from an R12 database, versions covered, DBA notes |
+| 🚦 [**Limits & guardrails**](doc/limits.md) | Concurrency, result sizes, timeouts, cancellation, large types — what one query costs the tenant |
 | 🧪 [**Testing & verification**](doc/testing.md) | What's actually verified, against which Oracle versions and clients — and what isn't |
 | 📈 [**Observability**](doc/observability.md) | Prometheus `/metrics`, `/healthz`, `/readyz` |
 | 🗂️ [**Metadata catalog**](doc/metadata.md) | What the catalog holds, how it fills itself, and how to refresh it |

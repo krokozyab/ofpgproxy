@@ -143,6 +143,10 @@ same network) — the proxy doesn't do any of that itself.
 confirmed against a real 288-column, all-NUMBER table capture. Run
 `ofpgproxy doctor --profiles` for the full per-feature grading.
 
+For an EBS R12 database specifically — `tnsnames.ora`, which database versions
+are covered, why no Database Gateway is involved, and the DBA-facing notes —
+see [Reading Fusion from EBS R12 over `dblink`](r12-dblink.md).
+
 ## GUI clients (DBeaver, DataGrip, JetBrains IDEs)
 
 Create an **Oracle** connection and use the same fields as

@@ -46,9 +46,30 @@ won't connect:
   whole OCI/ANO path entirely and is worth trying as a quick check that the
   proxy itself is reachable and configured correctly.
 
-## Oracle errors coming through
+## How Fusion's errors reach your client
 
-Every `ORA-…` is forwarded from Fusion as-is. The text is the original Oracle message — don't strip it, it's the quickest clue to the actual problem.
+BI Publisher reports failures as a SOAP fault wrapping a large XML document.
+You never see that. The proxy digs the Oracle error out of it and puts a real
+Oracle error on the wire, so a client shows what it would show against a real
+database:
+
+| What happened in Fusion | What your client sees |
+|---|---|
+| The SQL failed with an Oracle error (bad table, bad column, bad syntax) | That exact error, code and text — `ORA-00942: table or view does not exist` in DBeaver's error dialog, in SQLcl's output, in `SQLException.getErrorCode()` |
+| A write was attempted | `ORA-16000: database open for read-only access`, refused by the proxy before it ever reached Fusion |
+| The client cancelled (Ctrl-C, Cancel button) | `ORA-01013: user requested cancel of current operation` |
+| A statement the proxy doesn't implement | `ORA-03001: unimplemented feature`, session kept alive |
+| Cursors exhausted on one connection | `ORA-01000: maximum open cursors exceeded` |
+| The call failed with no Oracle error in it — transport, auth, a BIP-level fault | `ORA-00604` carrying the underlying message verbatim |
+
+That last row is the honest fallback: rather than inventing a plausible-looking
+code, the proxy says "something below this failed" and hands you the real text.
+If you see `ORA-00604`, read its message — it will name the actual problem
+(HTTP status, auth failure, malformed report response).
+
+There is no generic `500` and no opaque wrapper: if a code is available, you
+get that code. The full message is always preserved — don't strip it, it's the
+quickest clue to the actual problem.
 
 ### `ORA-16000: database open for read-only access`
 
