@@ -38,9 +38,10 @@ folder you control under `/Shared Folders/Custom/…`.
 Then note the report's absolute path and pass it as `--report-path` /
 `FUSION_SQL_REPORT_PATH`. `/Custom/Financials/RP_ARB.xdo` is the proxy's
 default because that is where ofjdbc's setup guide puts it, but tenants differ
-— `/Custom/sql/…` and `/Custom/CloudSQL/…` are both seen in the wild. **A
-wrong path fails every query**, and it fails in a way that looks like a
-permission problem, so check this before suspecting roles.
+— `/Custom/sql/…` and other per-team folders are just as common, and whoever
+uploaded the catalog may not have used the default at all. **A wrong path
+fails every query**, and it fails in a way that looks like a permission
+problem, so check this before suspecting roles.
 
 Uploading into the catalog is an authoring action: the account doing it needs
 BI authoring rights (a job role carrying the *BI Author* duty, or a BI
