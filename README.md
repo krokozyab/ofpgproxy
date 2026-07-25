@@ -2,18 +2,18 @@
   <img src="assets/hero.png" alt="ofpgproxy" width="800" />
 
   <h1>✨ ofpgproxy</h1>
-  <p><strong>Talk to Oracle Fusion Cloud in native Oracle SQL*Net — <code>sqlplus</code>, SQL Developer, SQLcl, ojdbc, python-oracledb, and a real Oracle database's own <code>dblink</code>.</strong></p>
+  <p><strong>Query Oracle Fusion Cloud with the Oracle clients you already have — <code>sqlplus</code>, SQL Developer, SQLcl, ojdbc, python-oracledb, and a real Oracle database's own <code>dblink</code>.</strong></p>
   <p>One binary between your existing Oracle tooling and a SaaS tenant that only speaks SOAP.</p>
 
   <br />
 
-  <img src="assets/oracle-wire.png" alt="Oracle clients and another Oracle database's dblink reach Oracle Fusion Cloud through ofpgproxy over Oracle SQL*Net" width="850" />
+  <img src="assets/oracle-wire.png" alt="Oracle clients and another Oracle database's dblink reach Oracle Fusion Cloud through ofpgproxy over TNS/TTC" width="850" />
 
   <br />
   <br />
 
   <a href="https://github.com/krokozyab/ofpgproxy/releases/latest"><img src="https://img.shields.io/badge/download-latest-success?style=flat-square&logo=github" alt="Latest release" /></a>
-  <img src="https://img.shields.io/badge/Oracle_SQLNet-Supported-F80000?style=flat-square&logo=oracle&logoColor=white" alt="Oracle SQL*Net" />
+  <img src="https://img.shields.io/badge/Oracle_Net-TNS%2FTTC-F80000?style=flat-square&logo=oracle&logoColor=white" alt="Oracle Net (TNS/TTC)" />
   <img src="https://img.shields.io/badge/Oracle_Fusion-Supported-F80000?style=flat-square&logo=oracle&logoColor=white" alt="Oracle Fusion" />
   <!--[![GitHub Downloads](https://img.shields.io/github/downloads/krokozyab/ofpgproxy/total?style=for-the-badge&logo=github)](https://github.com/krokozyab/ofpgproxy/releases)-->
 
@@ -30,7 +30,7 @@ Oracle Fusion Cloud's BI Publisher is the only sanctioned read-path out of a Saa
         (sqlplus, SQL Developer, SQLcl, ojdbc,
          python-oracledb, another database's dblink)
                           │
-                          │  Oracle SQL*Net (TNS/TTC)
+                          │  Oracle Net (TNS/TTC)
                           ▼
                   ┌───────────────┐
                   │   ofpgproxy   │
@@ -80,8 +80,8 @@ The data-dictionary catalog needs no setup: the proxy keeps its own cache next t
 
 ## 🦸‍♂️ What you get out of the box
 
-* 🔌 **Zero custom glue.** No specialized SDKs or custom integrations — if your tool speaks Oracle SQL*Net, it already speaks Fusion.
-* 🔶 **Native Oracle SQL*Net (TNS/TTC).** `sqlplus`, SQL Developer, SQLcl, ojdbc, python-oracledb and a real Oracle database's own `dblink` connect over the real wire bytes — a from-scratch protocol implementation, not an emulation layer bolted onto a driver.
+* 🔌 **Zero custom glue.** No specialized SDKs or custom integrations — if your tool speaks to an Oracle database, it already speaks to Fusion.
+* 🔶 **The real wire protocol (TNS/TTC).** `sqlplus`, SQL Developer, SQLcl, ojdbc, python-oracledb and a real Oracle database's own `dblink` connect over the actual protocol bytes — a from-scratch implementation, not an emulation layer bolted onto a driver.
 * 📚 **A catalog that builds itself.** Schema browsing is answered locally from a DuckDB catalog the proxy fills from your tenant on demand, so an IDE's tree never costs a slow round trip twice.
 * 🌊 **Memory-efficient streaming.** Results flow through the proxy as they arrive. It doesn't buffer massive datasets, keeping its footprint tiny.
 * 🔒 **Read-only by design.** BI Publisher can't write, and neither will the proxy. No accidental DML. Sleep soundly.
@@ -102,9 +102,9 @@ The data-dictionary catalog needs no setup: the proxy keeps its own cache next t
 
 ## 🕹️ How it feels in practice
 
-You run the binary. You get an Oracle SQL*Net endpoint on `:1521` — except the tables inside are Oracle Fusion's.
+You run the binary. You get an Oracle listener on `:1521` — except the tables behind it are Oracle Fusion's.
 
-Everything that speaks the wire just connects: `sqlplus`, SQL Developer, SQLcl, a real Oracle database's `dblink`, a Python script using python-oracledb, a JVM service on ojdbc. Each query transparently becomes a BI Publisher SOAP call under the hood; rows stream back as the XML arrives.
+Everything that speaks to an Oracle database just connects: `sqlplus`, SQL Developer, SQLcl, a real Oracle database's `dblink`, a Python script using python-oracledb, a JVM service on ojdbc. Each query transparently becomes a BI Publisher SOAP call under the hood; rows stream back as the XML arrives.
 
 **Your tools never find out it isn't a real database.**
 
@@ -114,8 +114,8 @@ Everything that speaks the wire just connects: `sqlplus`, SQL Developer, SQLcl, 
 
 `ofpgproxy` is an independent, third-party tool. It is **not affiliated with, endorsed by, sponsored by, or supported by Oracle Corporation.**
 
-"Oracle", "Oracle Fusion Cloud", "SQL\*Net", "SQL Developer", and "SQLcl" are trademarks or registered trademarks of Oracle and/or its affiliates. They are used here only descriptively — to state what `ofpgproxy` interoperates with — and no affiliation or endorsement is implied.
+"Oracle", "Oracle Fusion Cloud", "Oracle Net", "SQL Developer", and "SQLcl" are trademarks or registered trademarks of Oracle and/or its affiliates. They are used here only descriptively — to state what `ofpgproxy` interoperates with — and no affiliation or endorsement is implied.
 
-`ofpgproxy` reads your tenant **only through Oracle's own documented BI Publisher web service** — the interface Oracle provides for this — authenticating with credentials **you** supply. It bundles no Oracle software and copies no Oracle source code; the Oracle SQL\*Net (TNS/TTC) endpoint is an independent implementation whose sole purpose is protocol interoperability.
+`ofpgproxy` reads your tenant **only through Oracle's own documented BI Publisher web service** — the interface Oracle provides for this — authenticating with credentials **you** supply. It bundles no Oracle software and copies no Oracle source code; the Oracle Net (TNS/TTC) endpoint is an independent implementation whose sole purpose is protocol interoperability.
 
 You are responsible for using `ofpgproxy` in accordance with your own Oracle Cloud subscription terms, license agreements, and applicable law. Nothing here is legal advice — if you have doubts, talk to your own counsel.

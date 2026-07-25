@@ -1,7 +1,7 @@
 # Quick Start
 
-From zero to a working query against Fusion in five minutes, over Oracle
-SQL*Net — `sqlplus`, SQL Developer, SQLcl, ojdbc, python-oracledb, or another
+From zero to a working query against Fusion in five minutes, from any Oracle
+client — `sqlplus`, SQL Developer, SQLcl, ojdbc, python-oracledb, or another
 database's `dblink`.
 
 ## 1. Prerequisites
@@ -53,7 +53,7 @@ FUSION_AUTH_TYPE=sso
 Pick which wire(s) to turn on — both can run from the same process:
 
 ```
-# Oracle SQL*Net (sqlplus, SQL Developer, SQLcl, dblink):
+# Oracle listener (sqlplus, SQL Developer, SQLcl, ojdbc, dblink):
 OFPG_ORACLE_LISTEN=127.0.0.1:1521
 ORACLE_WIRE_PASSWORD=changeme   # YOU choose this value — every Oracle client logs in with it; required once OFPG_ORACLE_LISTEN is set
 
