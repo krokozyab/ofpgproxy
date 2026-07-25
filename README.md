@@ -64,13 +64,29 @@ Point existing Oracle tooling straight at Fusion — nothing to port:
 #    https://github.com/krokozyab/ofpgproxy/releases/latest
 ./ofpgproxy --version
 
-# 2. Point it at your Oracle Fusion tenant
+# 2. Point it at your Oracle Fusion tenant.
+#    --oracle-password is a value YOU choose here and now; it is not a Fusion
+#    password. Every Oracle client will log in with this exact string.
 FUSION_HOST=fa-xxxx.oraclecloud.com FUSION_AUTH_TYPE=sso \
-  ./ofpgproxy --oracle-listen 127.0.0.1:1521 --oracle-password secret
+  ./ofpgproxy --oracle-listen 127.0.0.1:1521 --oracle-password changeme
 
-# 3. Connect with a real Oracle client
-sqlplus FUSION/secret@//127.0.0.1:1521/fusion
+# 3. Connect with a real Oracle client.
+#    user = FUSION, password = the --oracle-password value above, service = anything
+sqlplus FUSION/changeme@//127.0.0.1:1521/fusion
 ```
+
+**The two credential rules**, because they are not the ones you expect:
+
+- **Username `FUSION`, uppercase.** Any username authenticates — but every
+  object the proxy reports is owned by the single logical schema `FUSION`, and
+  IDE trees filter by owner client-side. Connect as anything else and the
+  Tables/Views tree renders successfully and *empty*.
+- **Password = your `--oracle-password` / `ORACLE_WIRE_PASSWORD` value.** This
+  is the one thing that *is* validated. It is not your Fusion password: Fusion
+  credentials are what the proxy uses on its own side (`--auth`), and clients
+  never see them.
+
+The service name is ignored — put anything after the `/`.
 
 *First run opens your IdP in Chrome; the SSO token is then held in-process. If your tenant supports it, standard basic authentication (`--auth=password`) is also available.*
 

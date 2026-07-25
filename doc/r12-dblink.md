@@ -46,14 +46,14 @@ The proxy does none of this for you. Bind it accordingly:
 
 ```bash
 ./ofpgproxy \
-  --oracle-listen 0.0.0.0:1521 --oracle-password 'a-strong-shared-secret' \
+  --oracle-listen 0.0.0.0:1521 --oracle-password 'changeme' \
   --fusion-host fa-xxxx.oraclecloud.com --auth=jwt-assertion
 ```
 
 Two warnings. First, `--oracle-password` is the **only** credential on that
-listener — if it is reachable from more than the database host, that password
-is your entire access control. Second, a long-lived service needs an auth mode
-that does not involve a browser: see [Authentication](auth.md) for
+listener — obviously not literally `changeme`: if the port is reachable from
+more than the database host, that value is your entire access control. Second,
+a long-lived service needs an auth mode that does not involve a browser: see [Authentication](auth.md) for
 `token-file`, `client-credentials` and `jwt-assertion`.
 
 ## 2. Add a TNS entry (or inline the descriptor)
@@ -83,12 +83,12 @@ this step and inline the same descriptor in the `USING` clause below.
 ```sql
 -- with a tnsnames entry:
 CREATE DATABASE LINK fusion_saas
-  CONNECT TO "FUSION" IDENTIFIED BY "a-strong-shared-secret"
+  CONNECT TO "FUSION" IDENTIFIED BY "changeme"
   USING 'OFPGPROXY';
 
 -- or entirely self-contained, no tnsnames.ora change:
 CREATE DATABASE LINK fusion_saas
-  CONNECT TO "FUSION" IDENTIFIED BY "a-strong-shared-secret"
+  CONNECT TO "FUSION" IDENTIFIED BY "changeme"
   USING '(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=proxy-host.example.com)(PORT=1521))
           (CONNECT_DATA=(SERVICE_NAME=fusion)))';
 ```

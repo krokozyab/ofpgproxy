@@ -6,7 +6,7 @@ and Kubernetes-style health probes. It's **off by default** — enable it with
 
 ```bash
 ./ofpgproxy \
-  --oracle-listen 127.0.0.1:1521 --oracle-password secret \
+  --oracle-listen 127.0.0.1:1521 --oracle-password changeme \
   --metrics-listen 127.0.0.1:9101 \
   --metadata-path ./metadata.db
 ```

@@ -73,7 +73,7 @@ connect. Columns describe with their real Oracle types
 
 ```bash
 ./ofpgproxy \
-  --oracle-listen 127.0.0.1:1521 --oracle-password secret \
+  --oracle-listen 127.0.0.1:1521 --oracle-password changeme \
   --fusion-host fa-xxxx.oraclecloud.com --auth=sso
 # sqlplus / SQL Developer / SQLcl / python-oracledb on :1521
 ```
@@ -168,7 +168,7 @@ By default the proxy runs **one** SOAP call to BI Publisher at a time — every 
 For IDE-heavy use (DBeaver, DataGrip, DBVis tabs running queries in parallel), `1` becomes painful — a long `SELECT` blocks every other window. Raise the cap when you care more about responsiveness than minimising session pressure:
 
 ```bash
-./ofpgproxy --oracle-listen 127.0.0.1:1521 --oracle-password secret \
+./ofpgproxy --oracle-listen 127.0.0.1:1521 --oracle-password changeme \
   --soap-concurrency 4 \
   --fusion-host fa-xxxx.oraclecloud.com --auth=sso
 ```
@@ -247,7 +247,7 @@ backend call normally regardless of this setting.
 Set `0` to disable the watchdog entirely.
 
 ```bash
-./ofpgproxy --oracle-listen 127.0.0.1:1521 --oracle-password secret \
+./ofpgproxy --oracle-listen 127.0.0.1:1521 --oracle-password changeme \
   --oracle-protocol-timeout 15s
 ```
 
@@ -279,7 +279,7 @@ own error handling.
 
 ```bash
 mkdir -p /var/log/ofpgproxy/diagnostics
-./ofpgproxy --oracle-listen 127.0.0.1:1521 --oracle-password secret \
+./ofpgproxy --oracle-listen 127.0.0.1:1521 --oracle-password changeme \
   --oracle-diagnostic-dir /var/log/ofpgproxy/diagnostics
 ```
 
@@ -293,7 +293,7 @@ see [Troubleshooting](troubleshooting.md) for the matching log line shape.
 A small built-in web page that shows, statement by statement, what the proxy *would* do with a given SQL — which router branch it lands in (catalog stub, foreign SELECT, cursor, session no-op, …) and the rewritten SQL that would go to BI Publisher or to the local DuckDB catalog. No connection to a Fusion tenant is required; translation is entirely offline.
 
 ```bash
-./ofpgproxy --oracle-listen 127.0.0.1:1521 --oracle-password secret --translate-http 127.0.0.1:8080
+./ofpgproxy --oracle-listen 127.0.0.1:1521 --oracle-password changeme --translate-http 127.0.0.1:8080
 ```
 
 Then open <http://127.0.0.1:8080> in a browser. `make run` enables it by default on `127.0.0.1:8080`; disable with `make run TRANSLATE_HTTP=`.

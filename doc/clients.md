@@ -52,16 +52,16 @@ Username note above, not a bug to report.
 ### SQLcl / python-oracledb
 
 ```bash
-sql FUSION/secret@127.0.0.1:1521/fusion
+sql FUSION/changeme@127.0.0.1:1521/fusion
 ```
 
 ```python
 import oracledb
-oracledb.connect(user="FUSION", password="secret", dsn="127.0.0.1:1521/fusion")
+oracledb.connect(user="FUSION", password="changeme", dsn="127.0.0.1:1521/fusion")
 ```
 
 `FUSION` is the recommended username (any value authenticates — see the
-Username note above), `secret` stands for **your** `--oracle-password` /
+Username note above), `changeme` stands for **your** `--oracle-password` /
 `ORACLE_WIRE_PASSWORD` value, and the service name after `/` is arbitrary.
 
 **Supported clients — thin AND thick drivers, each with its own verified
@@ -93,12 +93,12 @@ TLS in front of the proxy instead (stunnel, a cloud load balancer, etc.).
 ### sqlplus
 
 ```bash
-sqlplus FUSION/secret@//127.0.0.1:1521/fusion
+sqlplus FUSION/changeme@//127.0.0.1:1521/fusion
 ```
 
 Same credentials as SQLcl above — `FUSION` is the recommended username (any
 value authenticates, but IDE object trees only line up with the single logical
-schema every object is reported under when you connect as `FUSION`), `secret`
+schema every object is reported under when you connect as `FUSION`), `changeme`
 stands for your `--oracle-password` / `ORACLE_WIRE_PASSWORD` value, service
 name after `/` is arbitrary. Ordinary `SELECT`s and `DBMS_OUTPUT`-free
 anonymous PL/SQL blocks that only run session no-ops (`ALTER SESSION`,
@@ -121,7 +121,7 @@ report per query:
 
 ```sql
 CREATE DATABASE LINK fusion_link
-  CONNECT TO FUSION IDENTIFIED BY secret
+  CONNECT TO FUSION IDENTIFIED BY changeme
   USING '(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=<proxy-host>)(PORT=1521))
           (CONNECT_DATA=(SERVICE_NAME=fusion)))';
 
@@ -130,7 +130,7 @@ FROM   gl_je_lines@fusion_link
 WHERE  ROWNUM <= 5;
 ```
 
-Same credential rules as above: `IDENTIFIED BY secret` must be **your**
+Same credential rules as above: `IDENTIFIED BY changeme` must be **your**
 `--oracle-password` / `ORACLE_WIRE_PASSWORD` value; the `CONNECT TO` username
 is not validated.
 
@@ -170,7 +170,7 @@ authenticates but leaves the Tables/Views tree empty), Password = your
 import oracledb
 
 dsn = oracledb.makedsn("127.0.0.1", 1521, service_name="fusion")
-with oracledb.connect(user="FUSION", password="secret", dsn=dsn) as conn:
+with oracledb.connect(user="FUSION", password="changeme", dsn=dsn) as conn:
     cur = conn.cursor()
     cur.execute("SELECT period_name, period_year FROM gl_periods WHERE ROWNUM <= 5")
     for row in cur:
@@ -184,7 +184,7 @@ named) work.
 
 ```java
 var url = "jdbc:oracle:thin:@//127.0.0.1:1521/fusion";
-try (var conn = DriverManager.getConnection(url, "FUSION", "secret");
+try (var conn = DriverManager.getConnection(url, "FUSION", "changeme");
      var st = conn.createStatement();
      var rs = st.executeQuery("SELECT period_name FROM gl_periods WHERE ROWNUM <= 5")) {
     while (rs.next()) System.out.println(rs.getString(1));
