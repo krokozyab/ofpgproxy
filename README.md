@@ -12,10 +12,10 @@
   <br />
   <br />
 
-  <a href="https://github.com/krokozyab/ofpgproxy/releases/latest"><img src="https://img.shields.io/badge/download-latest-success?style=flat-square&logo=github" alt="Latest release" /></a>
+  <a href="https://github.com/krokozyab/oracle-fusion-tns-proxy/releases/latest"><img src="https://img.shields.io/badge/download-latest-success?style=flat-square&logo=github" alt="Latest release" /></a>
   <img src="https://img.shields.io/badge/Oracle_Net-TNS%2FTTC-F80000?style=flat-square&logo=oracle&logoColor=white" alt="Oracle Net (TNS/TTC)" />
   <img src="https://img.shields.io/badge/Oracle_Fusion-Supported-F80000?style=flat-square&logo=oracle&logoColor=white" alt="Oracle Fusion" />
-  <!--[![GitHub Downloads](https://img.shields.io/github/downloads/krokozyab/ofpgproxy/total?style=for-the-badge&logo=github)](https://github.com/krokozyab/ofpgproxy/releases)-->
+  <!--[![GitHub Downloads](https://img.shields.io/github/downloads/krokozyab/oracle-fusion-tns-proxy/total?style=for-the-badge&logo=github)](https://github.com/krokozyab/oracle-fusion-tns-proxy/releases)-->
 
   <br />
   <br />
@@ -61,7 +61,7 @@ Point existing Oracle tooling straight at Fusion — nothing to port:
 
 ```bash
 # 1. Grab the binary from the latest release:
-#    https://github.com/krokozyab/ofpgproxy/releases/latest
+#    https://github.com/krokozyab/oracle-fusion-tns-proxy/releases/latest
 ./ofpgproxy --version
 
 # 2. Point it at your Oracle Fusion tenant.

@@ -13,7 +13,7 @@ database's `dblink`.
 
 ## 2. Get the artefacts
 
-Grab the archive for your platform from the [latest GitHub release](https://github.com/krokozyab/ofpgproxy/releases/latest) — double-click to extract on macOS Finder or Windows Explorer, no `tar`, no `zstd`.
+Grab the archive for your platform from the [latest GitHub release](https://github.com/krokozyab/oracle-fusion-tns-proxy/releases/latest) — double-click to extract on macOS Finder or Windows Explorer, no `tar`, no `zstd`.
 
 | Download | Contents |
 |---|---|
