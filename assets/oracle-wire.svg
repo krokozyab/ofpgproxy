@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1296" height="396" viewBox="0 0 1296 396">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#c0d3da"/>
+    </marker>
+    <style>
+      .b  { fill: none; stroke: #c0d3da; stroke-width: 2; }
+      .t  { fill: #c0d3da; font-family: Menlo, "DejaVu Sans Mono", monospace; font-size: 21px; }
+      .s  { fill: #9fb2b9; font-family: Menlo, "DejaVu Sans Mono", monospace; font-size: 18px; }
+      .l  { fill: #9fb2b9; font-family: Menlo, "DejaVu Sans Mono", monospace; font-size: 16px; text-anchor: middle; }
+      .ln { stroke: #c0d3da; stroke-width: 2; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1296" height="396" fill="#000000"/>
+  <rect x="8" y="8" width="1280" height="380" fill="#202020"/>
+
+  <!-- clients: interactive tools -->
+  <rect class="b" x="40" y="48" width="320" height="118"/>
+  <text class="t" x="62" y="84">sqlplus · SQLcl</text>
+  <text class="t" x="62" y="114">SQL Developer · ojdbc</text>
+  <text class="t" x="62" y="144">python-oracledb</text>
+
+  <!-- clients: another database -->
+  <rect class="b" x="40" y="230" width="320" height="118"/>
+  <text class="t" x="62" y="272">another Oracle</text>
+  <text class="t" x="62" y="302">database</text>
+  <text class="s" x="62" y="331">(dblink)</text>
+
+  <!-- arrows into the proxy -->
+  <text class="l" x="440" y="89">TNS/TTC</text>
+  <line class="ln" x1="362" y1="107" x2="516" y2="107"/>
+  <text class="l" x="440" y="271">TNS/TTC</text>
+  <line class="ln" x1="362" y1="289" x2="516" y2="289"/>
+
+  <!-- proxy -->
+  <rect class="b" x="520" y="78" width="290" height="240"/>
+  <text class="t" x="546" y="130">ofpgproxy</text>
+  <text class="s" x="546" y="160">(single binary)</text>
+  <text class="t" x="546" y="240">listens :1521</text>
+  <text class="s" x="546" y="270">read-only</text>
+
+  <!-- arrow to fusion -->
+  <text class="l" x="880" y="180">SOAP</text>
+  <line class="ln" x1="812" y1="198" x2="946" y2="198"/>
+
+  <!-- fusion -->
+  <rect class="b" x="950" y="138" width="306" height="120"/>
+  <text class="t" x="974" y="182">Oracle Fusion Cloud</text>
+  <text class="s" x="974" y="212">(BI Publisher)</text>
+</svg>

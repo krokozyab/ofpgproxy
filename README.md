@@ -7,6 +7,11 @@
 
   <br />
 
+  <img src="assets/oracle-wire.png" alt="Oracle clients and another Oracle database's dblink reach Oracle Fusion Cloud through ofpgproxy over Oracle SQL*Net" width="850" />
+
+  <br />
+  <br />
+
   <a href="https://github.com/krokozyab/ofpgproxy/releases/latest"><img src="https://img.shields.io/badge/download-latest-success?style=flat-square&logo=github" alt="Latest release" /></a>
   <img src="https://img.shields.io/badge/Oracle_SQLNet-Supported-F80000?style=flat-square&logo=oracle&logoColor=white" alt="Oracle SQL*Net" />
   <img src="https://img.shields.io/badge/Oracle_Fusion-Supported-F80000?style=flat-square&logo=oracle&logoColor=white" alt="Oracle Fusion" />
