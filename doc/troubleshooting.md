@@ -48,7 +48,7 @@ won't connect:
 
 ## Oracle errors coming through
 
-Every `ORA-…` is forwarded from Fusion with a matching PostgreSQL SQLSTATE. The text is the original Oracle message — don't strip it, it's the quickest clue to the actual problem.
+Every `ORA-…` is forwarded from Fusion as-is. The text is the original Oracle message — don't strip it, it's the quickest clue to the actual problem.
 
 ### `ORA-16000: database open for read-only access`
 
@@ -77,25 +77,16 @@ Fusion can't find the table. Two possibilities:
 
 Your SQL references a column Oracle can't resolve.
 
-- **Quoted lowercase identifier** (`"period_name"`): Oracle stores unquoted identifiers uppercased, so `"period_name"` looks for a literal lowercase column and fails. Drop the quotes or uppercase inside them. [Full note](sql-compat.md#lowercase-quoted-identifiers).
-- **Qualified `USING`-column**: `SELECT t.col_in_using FROM a JOIN b USING (col_in_using)` is valid PG but rejected by Oracle. [Full note](sql-compat.md#qualified-reference-to-a-using-column).
-- **Spelling mismatch**: Fusion column names are usually UPPERCASE; psql and DBeaver lower-case them in display but the catalog stores uppercase. Inspect `pg_attribute` via `\d <table>` to confirm.
-
-### `ORA-00920: invalid relational operator`
-
-The SQL contains a PG-only operator the translator doesn't rewrite.
-
-- **Bare `WHERE TRUE` / `WHERE FALSE`**: Oracle has no Boolean predicate type. Use `WHERE 1=1` / `WHERE 1=0` explicitly.
-- **`IS DISTINCT FROM` / `IS NOT DISTINCT FROM`**: see [workaround](sql-compat.md#is-distinct-from--is-not-distinct-from).
-- **PG-specific arrays / JSONB operators** (`@>`, `<@`, `->>`, `?`): not rewritten. Use Oracle-native syntax (`JSON_VALUE`, `JSON_EXISTS`, …) or cache into DuckDB/a real PG.
+- **Quoted lowercase identifier** (`"period_name"`): Oracle stores unquoted identifiers uppercased, so `"period_name"` looks for a literal lowercase column and fails. Drop the quotes or uppercase inside them.
+- **Spelling mismatch**: Fusion column names are UPPERCASE. Check the catalog with `DESCRIBE <table>` or `SELECT column_name FROM all_tab_columns WHERE table_name = '<TABLE>'`.
 
 ### `ORA-30485: missing ORDER BY expression in the window specification`
 
-`ROW_NUMBER()` / `RANK()` / `DENSE_RANK()` / `NTILE()` require an `ORDER BY` inside `OVER(…)` on Oracle. See [workaround](sql-compat.md#row_number-over--without-order-by).
+`ROW_NUMBER()` / `RANK()` / `DENSE_RANK()` / `NTILE()` require an `ORDER BY` inside `OVER(…)` on Oracle. Add one — `ORDER BY NULL` or `ORDER BY 1` if the order genuinely doesn't matter.
 
 ### `ORA-30484: missing window specification for this function`
 
-Named windows (`WINDOW w AS (…)` + `OVER w`) aren't supported by Oracle. Inline the spec at every `OVER`. [Note](sql-compat.md#named-window-clause).
+Named windows (`WINDOW w AS (…)` + `OVER w`) aren't supported by Oracle. Inline the spec at every `OVER`.
 
 ### `ORA-00979: not a GROUP BY expression`
 
@@ -125,22 +116,16 @@ A string failed to convert to a number. Inspect the failing expression for impli
 
 The router couldn't classify the statement. Supported kinds:
 
-- SELECT against foreign (Fusion) tables.
-- SELECT against `pg_catalog.*` / `information_schema.*`.
-- Session verbs: `BEGIN`, `COMMIT`, `ROLLBACK`, `SAVEPOINT`, `SET`, `RESET`, `DISCARD`, `SHOW`.
-- Cursor verbs: `DECLARE … CURSOR FOR …`, `FETCH`, `CLOSE`.
-- `COPY (SELECT …) TO STDOUT` — text format only (DuckDB `postgres_scanner` with `pg_use_binary_copy=false`, `psql \copy`, `pg_dump --data-only`).
-- `SELECT 1`, `SELECT '<literal>'` — handshake fast paths.
+- `SELECT` against Fusion tables.
+- `SELECT` against the data dictionary (`ALL_TABLES`, `ALL_TAB_COLUMNS`, `ALL_OBJECTS`, `USER_*`, `DBA_*`, `DUAL`).
+- Session verbs: `ALTER SESSION`, `SET`, `COMMIT`, `ROLLBACK` — accepted as no-ops.
+- `SELECT 1 FROM DUAL` and similar handshake probes.
 
-Everything else (DDL, DML, binary `COPY`, `LISTEN`/`NOTIFY`, large-object verbs) is rejected. Writes are an intentional `42501 permission_denied` — BI Publisher is read-only; if you need write-back, target a downstream database.
+Everything else (DDL, DML, PL/SQL blocks) is rejected. Writes come back as `ORA-16000` — BI Publisher is read-only; if you need write-back, target a downstream database.
 
-If you think a query *should* be classifiable (new PG idiom, new BI-tool probe), capture the SQL from `--log-queries` output and file it — translator passes are cheap to add.
+If you think a query *should* be classifiable (a new client probe, a dictionary view we don't emulate yet), capture the SQL from `--log-queries` output and file it — these are cheap to add.
 
 > **Tip:** start the proxy with `--translate-http 127.0.0.1:8080` and paste the offending SQL into the playground at <http://127.0.0.1:8080>. It shows the router decision and the exact rewrite without touching Fusion — useful for narrowing down whether the issue is in routing, translation, or BIP itself. See [Configuration → SQL Translator playground](configuration.md#sql-translator-playground).
-
-### `DISTINCT ON form not supported`
-
-The `DISTINCT ON` rewrite handles simple top-level SELECTs. More exotic forms (inside UNIONs, with CTEs, with `*` target) are rejected. Rewrite manually with `ROW_NUMBER() OVER (PARTITION BY … ORDER BY …)` and filter on the partition rank. [Full note](sql-compat.md#distinct-on-form-not-supported).
 
 ## Client-side surprises
 
@@ -151,7 +136,7 @@ The `DISTINCT ON` rewrite handles simple top-level SELECTs. More exotic forms (i
 
 ### A long query blocks every other tab / connection
 
-The proxy serialises foreign `SELECT`s through a single SOAP slot by default (`--soap-concurrency=1`) — one call in flight at a time. While a heavy `SELECT` is running on tab A, every new query on tab B waits. `pg_catalog` / `information_schema` queries (IDE introspection) bypass this and stay responsive — only Fusion-table queries queue up.
+The proxy serialises `SELECT`s against Fusion through a single SOAP slot by default (`--soap-concurrency=1`) — one call in flight at a time. While a heavy `SELECT` is running on tab A, every new query on tab B waits. Data-dictionary queries (IDE introspection) bypass this and stay responsive — only Fusion-table queries queue up.
 
 Raise the cap for interactive use:
 
@@ -178,11 +163,19 @@ stays your `--oracle-password` value — username isn't otherwise validated).
 Ad-hoc `SELECT`s you type yourself aren't affected either way — this only
 breaks the auto-generated tree-browsing queries.
 
-### Empty `\d <table>` or empty Metabase schema sync
+### Empty schema tree, or a table with no columns
 
-Catalog isn't mounted. Check the startup log for `pg_catalog emulation enabled, reading …` — if missing, relaunch with `--metadata-path`.
+Run `ofpgproxy doctor` — `metadata.counts` says outright whether the catalog is
+populated, and an empty one answers every query with nothing, which otherwise
+looks like success.
 
-If the line is there but a specific table has zero columns (`\d gl_je_categories` empty), that particular table is missing from `cached_columns` in your shipped catalog. Pick up a refreshed `metadata.db` from the next release; if you need it sooner, open a GitHub issue.
+On a cold cache this is expected for a minute or two: the table list is fetched
+in the background on first use (the log says so, and
+`orawire_metadata_bootstrap_running` on `/metrics` reads 1 while it runs). A
+single table showing no columns should fix itself the moment a client asks for
+it — watch for a `metadata: cached N columns of <TABLE>` log line. If instead
+you see `has no columns in the tenant catalog`, that object genuinely isn't in
+`FND_COLUMNS`, which is also true of views. See [Metadata catalog](metadata.md).
 
 ### SSO keeps reopening Chrome
 
@@ -193,20 +186,6 @@ If it happens more often than every few hours, the refresh grant is failing sile
 ### `build auth header: token expired and refresh failed for sso`
 
 This error is from an older build where browser re-auth was not automatic. Current builds reopen Chrome on expiry instead of surfacing this error. Upgrade the proxy.
-
-### `postgres_fdw` fails with `unsupported query: DECLARE ... CURSOR FOR ...`
-
-You're on an old proxy build. Current builds support cursor protocol natively (streaming, not buffered). Upgrade.
-
-### DuckDB: `Failed to prepare COPY "COPY (...) TO STDOUT (FORMAT \"binary\")"`
-
-DuckDB's `postgres_scanner` defaults to binary `COPY`, which the proxy doesn't implement yet. Current DuckDB builds silently ignore `SET pg_use_binary_copy = false` — use the text-protocol switch instead, before the first query:
-
-```sql
-SET pg_use_text_protocol = true;
-```
-
-That makes `postgres_scanner` issue regular `SELECT` queries (which the proxy fully supports) instead of `COPY`. If you can't flip it (older DuckDB, third-party tool wrapping `postgres_scanner`), fall back to the [CSV pipeline or `dblink`](clients.md#duckdb).
 
 ### `Connection refused` from inside a Docker container
 
@@ -257,7 +236,7 @@ time=... level=INFO msg=parse kind=foreign_select parse_took=237ms sql="SELECT .
 
 Streaming SELECT completions log a follow-up `msg="exec done"` with `rows` and `took` for the full round trip.
 
-If a foreign SELECT fails once translated SQL reaches Fusion, the proxy logs a `msg="foreign exec failed"` WARN line alongside the `ORA-…` the client sees, with the *exact* Oracle SQL that was sent (`oracle_sql`) — not the original PG-flavoured query from `msg=parse`. This is the line to grab when a query works in `psql` but fails from a BI tool: the client-generated SQL (Power BI, Tableau, DBeaver's introspection) is often not what you'd expect from reading the tool's UI. Both `sql` fields truncate at ~2000 chars by default; set `OFPG_LOG_FULL_SQL=1` (see [Configuration → Debug / development](configuration.md#debug--development)) to capture them whole when a wide `SELECT *` or a 100+-column BI import is the suspect.
+If a foreign SELECT fails once translated SQL reaches Fusion, the proxy logs a `msg="foreign exec failed"` WARN line alongside the `ORA-…` the client sees, with the *exact* Oracle SQL that was sent (`oracle_sql`), not the statement as `msg=parse` logged it. This is the line to grab when a query works in `sqlplus` but fails from a GUI client: tool-generated SQL is often not what you'd expect from reading the UI. Both `sql` fields truncate at ~2000 chars by default; set `OFPG_LOG_FULL_SQL=1` (see [Configuration → Debug / development](configuration.md#debug--development)) to capture them whole when a wide `SELECT *` or a 100+-column BI import is the suspect.
 
 ## Still stuck?
 
