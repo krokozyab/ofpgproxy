@@ -11,9 +11,9 @@
 
 The last three are OAuth grants for **headless cloud deployments** — no browser. For running reports (which BI Publisher does *as a user*), `jwt-assertion` is the one to reach for; see [Headless cloud](#headless-cloud-oauth) below.
 
-Client-side credentials (what you type into `sqlplus`, SQL Developer or DBeaver) are a **separate, much simpler story** than the Fusion modes above:
+Client-side credentials (what you type into SQLcl, DBeaver or SQL Developer) are a **separate, much simpler story** than the Fusion modes above:
 
-- Any username is accepted (use `FUSION`, uppercase, so IDE tree-browsing works — see [Connecting clients](clients.md#oracle-clients-sql-developer-sqlcl-sqlplus)), but the password **must be** the shared value you set with `--oracle-password` / `ORACLE_WIRE_PASSWORD`.
+- Any username is accepted (use `FUSION`, uppercase, so IDE tree-browsing works — see [Connecting clients](clients.md#oracle-clients-sqlcl-dbeaver-sql-developer)), but the password **must be** the shared value you set with `--oracle-password` / `ORACLE_WIRE_PASSWORD`.
 
 All actual authentication against Oracle happens on the Fusion side using whichever mode you configured.
 

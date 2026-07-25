@@ -4,7 +4,7 @@ Oracle clients connect over TNS/TTC on `--oracle-listen` (there is no default �
 set it, plus `--oracle-password`). Examples below assume the proxy on
 `127.0.0.1:1521`.
 
-## Oracle clients (SQL Developer, SQLcl, sqlplus)
+## Oracle clients (SQLcl, DBeaver, SQL Developer)
 
 Start the proxy with `--oracle-listen` (and `--oracle-password`) — see
 [Configuration → Oracle-wire frontend](configuration.md#oracle-wire-frontend) —
@@ -29,25 +29,6 @@ must send that exact value:
   `ORACLE_WIRE_PASSWORD` (there's no default — the proxy won't start the Oracle
   listener without one). A wrong password fails the O5LOGON mutual handshake.
 - **Service name / SID** — anything (e.g. `fusion`). It is ignored.
-
-### SQL Developer
-
-New Connection → **Connection Type: Basic**:
-
-| Field | Value |
-|---|---|
-| Username | **`FUSION`** — see the note above; anything else authenticates fine but leaves the Tables/Views tree empty |
-| Password | your `--oracle-password` value |
-| Hostname | `127.0.0.1` |
-| Port | `1521` (or your `--oracle-listen` port) |
-| Service name | anything, e.g. `fusion` — pick **Service name**, not SID |
-
-**Test** → *Success*, then **Connect**. SQL Developer runs some data-dictionary
-queries on connect; `ALL_*`/`USER_*`/`DBA_*` views are all answered locally
-from `metadata.db` (not sent to Fusion) — including the "Tables"/"Views" tree
-nodes' own `SYS.DBA_OBJECTS`-style queries. If the tree expands with **no
-error but an empty list**, the connection's username isn't `FUSION` — see the
-Username note above, not a bug to report.
 
 ### SQLcl / python-oracledb
 
@@ -90,7 +71,33 @@ only unencrypted TCP TNS and advertises "no native security," so a client that
 insists on encryption still fails. If you need transport encryption, terminate
 TLS in front of the proxy instead (stunnel, a cloud load balancer, etc.).
 
+### SQL Developer
+
+New Connection → **Connection Type: Basic**:
+
+| Field | Value |
+|---|---|
+| Username | **`FUSION`** — see the note above; anything else authenticates fine but leaves the Tables/Views tree empty |
+| Password | your `--oracle-password` value |
+| Hostname | `127.0.0.1` |
+| Port | `1521` (or your `--oracle-listen` port) |
+| Service name | anything, e.g. `fusion` — pick **Service name**, not SID |
+
+**Test** → *Success*, then **Connect**. SQL Developer runs some data-dictionary
+queries on connect; `ALL_*`/`USER_*`/`DBA_*` views are all answered locally
+from `metadata.db` (not sent to Fusion) — including the "Tables"/"Views" tree
+nodes' own `SYS.DBA_OBJECTS`-style queries. If the tree expands with **no
+error but an empty list**, the connection's username isn't `FUSION` — see the
+Username note above, not a bug to report.
+
 ### sqlplus
+
+Works, but it is the least convenient option and the one with the narrowest
+verified scope: it is an OCI (thick) client, which is a harder protocol path
+than the thin drivers everything else here uses, and it needs a full Instant
+Client install. **SQLcl is the drop-in replacement** — same command style,
+single download, thin driver, better tested. Reach for `sqlplus` only if your
+scripts already depend on it.
 
 ```bash
 sqlplus FUSION/changeme@//127.0.0.1:1521/fusion

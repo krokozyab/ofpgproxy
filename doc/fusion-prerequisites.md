@@ -113,8 +113,8 @@ are deployed at the path you used, your account can run the report through the
 web service, and the endpoint is reachable. Point `ofpgproxy` at the same host
 and report path and it will work too.
 
-What the proxy adds on top: any Oracle client rather than a JVM one — `sqlplus`,
-SQL Developer, SQLcl, python-oracledb — and, the reason most people are here,
+What the proxy adds on top: any Oracle client, not only a JVM one — SQLcl,
+DBeaver, SQL Developer, python-oracledb — and, the reason most people are here,
 another Oracle database reading Fusion over its own
 [`dblink`](r12-dblink.md).
 

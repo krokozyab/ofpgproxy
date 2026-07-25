@@ -13,7 +13,7 @@ Flags always win over environment variables. A few parameters are available only
 
 | Flag | Env | Default | Description |
 |---|---|---|---|
-| `--oracle-listen` | `OFPG_ORACLE_LISTEN` | off | `host:port` the read-only **Oracle-wire (TNS/TTC)** listener binds to, for `sqlplus`, SQL Developer, SQLcl, ojdbc, python-oracledb and another database's `dblink`. See [Oracle-wire frontend](#oracle-wire-frontend). |
+| `--oracle-listen` | `OFPG_ORACLE_LISTEN` | off | `host:port` the read-only **Oracle-wire (TNS/TTC)** listener binds to, for SQLcl, DBeaver, SQL Developer, ojdbc, python-oracledb and another database's `dblink`. See [Oracle-wire frontend](#oracle-wire-frontend). |
 | `--oracle-password` | `ORACLE_WIRE_PASSWORD` | — | Shared password the Oracle-wire O5LOGON handshake accepts (any username). **Required** with `--oracle-listen`. |
 | `--metrics-listen` | `OFPG_METRICS_LISTEN` | off | `host:port` for the ops HTTP server: Prometheus `/metrics` + `/healthz` + `/readyz`. Requires `--oracle-listen`. No auth — bind to loopback. See [Observability](observability.md). |
 | `--oracle-protocol-timeout` | `OFPG_ORACLE_PROTOCOL_TIMEOUT` | `30s` | Protocol watchdog timeout for the Oracle-wire frontend, `time.Duration` syntax. `0` disables it. See [Protocol watchdog & diagnostics](#protocol-watchdog--diagnostics). |
@@ -67,8 +67,8 @@ copy-paste starting point lives in `.env.example`.
 
 Set `--oracle-listen`/`OFPG_ORACLE_LISTEN` (plus `--oracle-password`) to expose
 the **read-only** listener speaking the Oracle TNS/TTC protocol, so `sqlplus`,
-SQL Developer, SQLcl, ojdbc, python-oracledb and another database's `dblink`
-connect. Columns describe with their real Oracle types
+SQLcl, DBeaver, SQL Developer, ojdbc, python-oracledb and another database's
+`dblink` connect. Columns describe with their real Oracle types
 (NUMBER/DATE/TIMESTAMP/RAW/CLOB/BLOB/…) resolved from the metadata catalog.
 
 ```bash
@@ -79,7 +79,7 @@ connect. Columns describe with their real Oracle types
 ```
 
 Oracle clients log in with **any username** and the shared `--oracle-password`
-(the service name is ignored). See [Oracle clients](clients.md#oracle-clients-sql-developer-sqlcl-sqlplus) for the exact SQL Developer / SQLcl fields.
+(the service name is ignored). See [Oracle clients](clients.md#oracle-clients-sqlcl-dbeaver-sql-developer) for the exact SQL Developer / SQLcl fields.
 
 **Thin and thick drivers both work, each with its own verified scope.**
 Supported clients include the thin (pure-Java / pure-Python) Oracle drivers —
@@ -93,7 +93,7 @@ actually turning ON native encryption/TCPS (`SQLNET.ENCRYPTION_*`) is still
 out of scope; terminate TLS in front of the proxy instead if you need that.
 
 "Both work" does not mean every client/dialect works identically — coverage
-varies by client and query shape. See [Oracle clients](clients.md#oracle-clients-sql-developer-sqlcl-sqlplus)
+varies by client and query shape. See [Oracle clients](clients.md#oracle-clients-sqlcl-dbeaver-sql-developer)
 for connection strings. `ofpgproxy doctor` reports which profile a real
 connection resolves to and warns (never blocks) on an unverified one; run
 `ofpgproxy doctor --profiles` for the full, evidence-graded breakdown.

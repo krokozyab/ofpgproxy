@@ -175,7 +175,7 @@ connected username>` — the client fills this in itself, client-side, from
 whatever username it authenticated with; it never asks the proxy what the
 "real" schema is. The proxy reports every object as owned by the single
 logical schema `FUSION` (see [Connecting clients → Oracle
-clients](clients.md#oracle-clients-sql-developer-sqlcl-sqlplus)), so any other
+clients](clients.md#oracle-clients-sqlcl-dbeaver-sql-developer)), so any other
 username makes the tree query run successfully (no `ORA-` error) and just
 return zero rows.
 

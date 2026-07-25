@@ -2,7 +2,7 @@
   <img src="assets/hero.png" alt="ofpgproxy" width="800" />
 
   <h1>✨ ofpgproxy</h1>
-  <p><strong>Query Oracle Fusion Cloud with the Oracle clients you already have — <code>sqlplus</code>, SQL Developer, SQLcl, ojdbc, python-oracledb, and a real Oracle database's own <code>dblink</code>.</strong></p>
+  <p><strong>Query Oracle Fusion Cloud with the Oracle clients you already have — SQLcl, DBeaver, SQL Developer, ojdbc, python-oracledb, and a real Oracle database's own <code>dblink</code>.</strong></p>
   <p>One binary between your existing Oracle tooling and a SaaS tenant that only speaks SOAP.</p>
 
   <br />
@@ -21,13 +21,13 @@
   <br />
 </div>
 
-Oracle Fusion Cloud's BI Publisher is the only sanctioned read-path out of a SaaS tenant. It speaks SOAP, returns base64-wrapped XML — and every Oracle client you already own (`sqlplus`, a reconciliation script over `dblink`, SQL Developer, an ojdbc-based service) expects the real Oracle wire protocol instead.
+Oracle Fusion Cloud's BI Publisher is the only sanctioned read-path out of a SaaS tenant. It speaks SOAP, returns base64-wrapped XML — and every Oracle client you already own (SQLcl, DBeaver, a reconciliation script over `dblink`, an ojdbc-based service) expects the real Oracle wire protocol instead.
 
 **`ofpgproxy` sits between them and makes them agree.**
 
 ```text
                     Oracle clients
-        (sqlplus, SQL Developer, SQLcl, ojdbc,
+       (SQLcl, DBeaver, SQL Developer, ojdbc,
          python-oracledb, another database's dblink)
                           │
                           │  Oracle Net (TNS/TTC)
@@ -44,7 +44,7 @@ Oracle Fusion Cloud's BI Publisher is the only sanctioned read-path out of a Saa
 ### 🎯 Native Oracle, no rewrite required
 
 Point existing Oracle tooling straight at Fusion — nothing to port:
-*   **`sqlplus` / SQL Developer / SQLcl** — point them at Fusion and run your `SELECT`s, no rewrite. Tree navigation, autocomplete and result grids intact.
+*   **SQLcl, DBeaver, SQL Developer** — point them at Fusion and run your `SELECT`s, no rewrite. Tree navigation, autocomplete and result grids intact. (`sqlplus` works too.)
 *   **A real Oracle database's own `dblink`** — reconciliation scripts, migration validation, anything already written to query a remote Oracle schema keeps working unchanged. Verified from both 19c and 23ai/26ai initiators.
 *   **ojdbc / python-oracledb** — service code that already speaks the Oracle driver connects without touching a line.
 *   *Read-only by construction — BI Publisher can't write, so DML is rejected regardless of client.*
@@ -70,9 +70,10 @@ Point existing Oracle tooling straight at Fusion — nothing to port:
 FUSION_HOST=fa-xxxx.oraclecloud.com FUSION_AUTH_TYPE=sso \
   ./ofpgproxy --oracle-listen 127.0.0.1:1521 --oracle-password changeme
 
-# 3. Connect with a real Oracle client.
-#    user = FUSION, password = the --oracle-password value above, service = anything
-sqlplus FUSION/changeme@//127.0.0.1:1521/fusion
+# 3. Connect with a real Oracle client — SQLcl here, one download, no
+#    Instant Client needed. user = FUSION, password = the --oracle-password
+#    value above, service name = anything.
+sql FUSION/changeme@//127.0.0.1:1521/fusion
 ```
 
 **The two credential rules**, because they are not the ones you expect:
@@ -92,12 +93,12 @@ The service name is ignored — put anything after the `/`.
 
 The data-dictionary catalog needs no setup: the proxy keeps its own cache next to the binary and fills it from your tenant as you use it — the table list on first use, a table's columns the first time a client asks. One BI Publisher call each, kept for good. `ofpgproxy warm-metadata` fills it in one go if you'd rather not wait.
 
-👉 **[Read the Full Quick Start Guide](doc/quickstart.md)** · **[Connecting Oracle clients](doc/clients.md#oracle-clients-sql-developer-sqlcl-sqlplus)**
+👉 **[Read the Full Quick Start Guide](doc/quickstart.md)** · **[Connecting Oracle clients](doc/clients.md#oracle-clients-sqlcl-dbeaver-sql-developer)**
 
 ## 🦸‍♂️ What you get out of the box
 
 * 🔌 **Zero custom glue.** No specialized SDKs or custom integrations — if your tool speaks to an Oracle database, it already speaks to Fusion.
-* 🔶 **The real wire protocol (TNS/TTC).** `sqlplus`, SQL Developer, SQLcl, ojdbc, python-oracledb and a real Oracle database's own `dblink` connect over the actual protocol bytes — a from-scratch implementation, not an emulation layer bolted onto a driver.
+* 🔶 **The real wire protocol (TNS/TTC).** SQLcl, DBeaver, SQL Developer, ojdbc, python-oracledb and a real Oracle database's own `dblink` connect over the actual protocol bytes — a from-scratch implementation, not an emulation layer bolted onto a driver.
 * 📚 **A catalog that builds itself.** Schema browsing is answered locally from a DuckDB catalog the proxy fills from your tenant on demand, so an IDE's tree never costs a slow round trip twice.
 * 🌊 **Memory-efficient streaming.** Results flow through the proxy as they arrive. It doesn't buffer massive datasets, keeping its footprint tiny.
 * 🔒 **Read-only by design.** BI Publisher can't write, and neither will the proxy. No accidental DML. Sleep soundly.
@@ -108,7 +109,7 @@ The data-dictionary catalog needs no setup: the proxy keeps its own cache next t
 | Guide | Description |
 |---|---|
 | 🏎️ [**Quick Start**](doc/quickstart.md) | Zero to your first `SELECT` in 5 minutes |
-| 🤝 [**Connecting clients**](doc/clients.md) | Recipes for `sqlplus`, SQL Developer, SQLcl, `dblink`, ojdbc, python-oracledb |
+| 🤝 [**Connecting clients**](doc/clients.md) | Recipes for SQLcl, DBeaver, SQL Developer, `dblink`, ojdbc, python-oracledb |
 | ⚙️ [**Configuration**](doc/configuration.md) | Flags, env vars, ports, `ofpgproxy doctor`, and signals |
 | 🔑 [**Authentication**](doc/auth.md) | SSO, password, token-file, and OAuth (refresh / client-credentials / JWT-assertion) modes |
 | 🏛️ [**Fusion prerequisites**](doc/fusion-prerequisites.md) | What must exist in the tenant: the report, the account's rights, the endpoint — and how to verify them |
@@ -123,7 +124,7 @@ The data-dictionary catalog needs no setup: the proxy keeps its own cache next t
 
 You run the binary. You get an Oracle listener on `:1521` — except the tables behind it are Oracle Fusion's.
 
-Everything that speaks to an Oracle database just connects: `sqlplus`, SQL Developer, SQLcl, a real Oracle database's `dblink`, a Python script using python-oracledb, a JVM service on ojdbc. Each query transparently becomes a BI Publisher SOAP call under the hood; rows stream back as the XML arrives.
+Everything that speaks to an Oracle database just connects: SQLcl, DBeaver, SQL Developer, a real Oracle database's `dblink`, a Python script using python-oracledb, a JVM service on ojdbc — `sqlplus` too, if that is still what you reach for. Each query transparently becomes a BI Publisher SOAP call under the hood; rows stream back as the XML arrives.
 
 **Your tools never find out it isn't a real database.**
 
