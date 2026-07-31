@@ -95,7 +95,7 @@ The data-dictionary catalog needs no setup: the proxy keeps its own cache next t
 
 👉 **[Read the Full Quick Start Guide](doc/quickstart.md)** · **[Connecting Oracle clients](doc/clients.md#oracle-clients-sqlcl-dbeaver-sql-developer)**
 
-## 🪟 Rather not use a command line?
+## 🧭 Rather not use a command line?
 
 Put a file called **`.env`** next to the binary and double-click it. The proxy
 reads that file at startup, so a whole configuration is five lines of text:
@@ -110,11 +110,12 @@ ORACLE_WIRE_PASSWORD=choose-something-here
 
 A console window opens and stays open — that window *is* the proxy, and closing
 it stops it. Wait for `Oracle-wire (TNS) listening on 127.0.0.1:1521`, then point
-Excel at `127.0.0.1:1521/fusion` with user `FUSION` and the password you just
-invented. `oratofusionproxy doctor` checks the whole setup without involving a
-client at all.
+any Oracle client at `127.0.0.1:1521/fusion` with user `FUSION` and the password
+you just invented — a SQL editor, a BI tool, a spreadsheet, a script, all the
+same three values. `oratofusionproxy doctor` checks the whole setup without
+involving a client at all.
 
-👉 **[Step by step, with screenshots: Windows setup and Excel](doc/setup-windows.md)**
+👉 **[Setting it up, step by step](doc/setup.md)**
 
 ## 🦸‍♂️ What you get out of the box
 
@@ -130,7 +131,7 @@ client at all.
 | Guide | Description |
 |---|---|
 | 🏎️ [**Quick Start**](doc/quickstart.md) | Zero to your first `SELECT` in 5 minutes |
-| 🪟 [**Windows setup & Excel**](doc/setup-windows.md) | Step by step, no command line: the `.env` file, starting it, connecting Excel |
+| 🧭 [**Setting it up**](doc/setup.md) | Step by step, no command line: the `.env` file, starting it, connecting any client |
 | 🤝 [**Connecting clients**](doc/clients.md) | Recipes for SQLcl, DBeaver, SQL Developer, `dblink`, ojdbc, python-oracledb |
 | ⚙️ [**Configuration**](doc/configuration.md) | Flags, env vars, ports, `oratofusionproxy doctor`, and signals |
 | 🔑 [**Authentication**](doc/auth.md) | SSO, password, token-file, and OAuth (refresh / client-credentials / JWT-assertion) modes |
