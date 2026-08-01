@@ -194,7 +194,9 @@ clients](clients.md).
 | `ORA-12541: TNS:no listener` | Nothing is listening on that address. The proxy is not running, or `OFPG_ORACLE_LISTEN` is not set — check the console for the "listening on" line. |
 | The connection is refused with an unhelpful driver error | The password does not match `ORACLE_WIRE_PASSWORD`. It is the one value that *is* checked. |
 | The table list is empty, but the connection succeeded | The username is not `FUSION`. Clients filter the tree by owner. |
+| One row called `LOADING_TABLE_LIST_FROM_FUSION__PLEASE_REFRESH` | The catalog is new and the table list is still being fetched — a minute or two. Refresh the tree when the log says `table list ready`. |
 | `ORA-00942: table or view does not exist` on a real table | The catalog has not learned that table yet. Run `oratofusionproxy warm-metadata`, or just query it once — the proxy fetches and caches it. |
+| Expanding a table in the tree pauses for a second | Its columns are being fetched — one call, kept for good. The second expansion is instant. |
 | The console window vanishes instantly | It exited with an error you did not get to read. Start it from a terminal in that folder instead, so the message stays on screen. |
 
 More in [Troubleshooting](troubleshooting.md).

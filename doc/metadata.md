@@ -27,8 +27,13 @@ There is nothing to install. On first start the proxy creates
 is used:
 
 - **The table list** is fetched in the background the first time a client asks
-  for it — tens of BI Publisher calls, a couple of minutes, while the proxy
-  keeps serving.
+  for it — a handful of BI Publisher calls, a minute or two, while the proxy
+  keeps serving. That first answer therefore arrives before the list exists, and
+  rather than an empty tree the client is shown one row saying
+  `LOADING_TABLE_LIST_FROM_FUSION__PLEASE_REFRESH`. Refresh once the log says
+  `table list ready` and the real tables are there. The row is not a table: it
+  appears only while a fetch is genuinely running and only when the answer would
+  otherwise be empty, and a read-only catalog with nothing in it stays empty.
 - **A table's columns** are fetched the first time a client asks for that
   table. One call, kept for good. Ten clients expanding the same tree node
   cost one call, not ten; a table your tenant doesn't have is remembered so a
@@ -37,12 +42,34 @@ is used:
 Progress is in the log, and `orawire_metadata_*` counters on `/metrics` show
 how many fetches happened and whether a bootstrap is running.
 
-To fill it in one go instead — thousands of BI Publisher calls, so run it
-deliberately and throttle it on a shared tenant:
+To fill it in one go instead — run it deliberately, and throttle it on a tenant
+with other people on it:
 
 ```bash
-oratofusionproxy warm-metadata --fusion-host <host> --page-size 500 --interval 2s
+oratofusionproxy warm-metadata                 # settings from .env beside the binary
+oratofusionproxy warm-metadata --interval 2s   # a pause between calls
 ```
+
+Each page reports what it cost, split between the tenant and this machine,
+because "the warm is slow" has two entirely different causes:
+
+```
+[columns] page 3, 27000 rows so far (7 calls, 39s elapsed; fusion 2.398s, local write 1.005s)
+```
+
+**An interrupted warm resumes.** Stop it with Ctrl-C, or lose the machine, and
+the next run picks up where it stopped — phases that had already finished are
+not read again:
+
+```
+[columns] resuming an interrupted run at row 72000
+```
+
+A warm that RAN TO COMPLETION starts over on the next run, because then you are
+asking for a refresh. `--restart` forces that from an interrupted one.
+
+`--page-size` is rows per BI Publisher call, 9000 by default; lower it if your
+tenant refuses a page that size.
 
 ## Flags
 
