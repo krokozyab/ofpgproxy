@@ -5,11 +5,6 @@
 
   <br />
 
-  <img src="assets/oracle-wire.png" alt="Oracle clients and another Oracle database's dblink reach Oracle Fusion Cloud through oratofusionproxy over TNS/TTC" width="850" />
-
-  <br />
-  <br />
-
   <a href="https://github.com/krokozyab/oracle-fusion-tns-proxy/releases/latest"><img src="https://img.shields.io/badge/download-latest-success?style=flat-square&logo=github" alt="Latest release" /></a>
   <img src="https://img.shields.io/badge/Oracle_Net-TNS%2FTTC-F80000?style=flat-square&logo=oracle&logoColor=white" alt="Oracle Net (TNS/TTC)" />
   <img src="https://img.shields.io/badge/Oracle_Fusion-Supported-F80000?style=flat-square&logo=oracle&logoColor=white" alt="Oracle Fusion" />
@@ -23,21 +18,36 @@ Oracle Fusion Cloud's BI Publisher web service is the documented way to run ad-h
 
 **`oratofusionproxy` sits between them and makes them agree.**
 
-```text
-                   Oracle clients
-       (SQLcl, DBeaver, SQL Developer, ojdbc,
-     python-oracledb, another database's dblink)
-                          │
-                          │  Oracle Net (TNS/TTC)
-                          ▼
-                ┌──────────────────┐
-                │ oratofusionproxy │
-                └──────────────────┘
-                          │
-                          │  SOAP (BI Publisher · RP_ARB.xdo)
-                          ▼
-             Oracle Fusion Cloud tenant
+```mermaid
+flowchart LR
+    subgraph L["<b>Oracle clients you already have</b>"]
+        A["<b>SQL editors &amp; IDEs</b><br/>SQL Developer · DBeaver · SQLcl · sqlplus"]
+        B["<b>BI &amp; spreadsheets</b><br/>Power BI · Excel"]
+        C["<b>Your own code</b><br/>ojdbc · python-oracledb · ODP.NET · go-ora"]
+        D["<b>Another Oracle database</b><br/>CREATE DATABASE LINK · EBS R12 · 19c · 23ai/26ai"]
+    end
+
+    A -->|"<b>Oracle Net (TNS/TTC)</b><br/>the real protocol, no shim"| P["<b>oratofusionproxy</b><br/>one binary · read-only<br/>listens on :1521"]
+    B --> P
+    C --> P
+    D --> P
+    P -->|"SOAP · one report call per query"| F["<b>Oracle Fusion Cloud</b><br/>BI Publisher · RP_ARB.xdo"]
+    P -.->|"schema browsing,<br/>answered locally"| M[("<b>local catalog</b><br/>metadata-cache.db")]
+
+    classDef client fill:#eef4fb,stroke:#5b8db8,stroke-width:1px,color:#12283a
+    classDef proxy  fill:#e7f6ec,stroke:#2e8b57,stroke-width:2px,color:#0f2e1d
+    classDef store  fill:#fff6e5,stroke:#d19a2f,stroke-width:1px,color:#3a2a08
+    classDef cloud  fill:#fdeaea,stroke:#c0392b,stroke-width:2px,color:#3b1010
+    class A,B,C,D client
+    class P proxy
+    class M store
+    class F cloud
+    style L fill:none,stroke:#9aa5b1,stroke-dasharray:4 4,color:#6b7280
 ```
+
+Every client on the left is one this build has actually been driven with — the
+[compatibility matrix](doc/testing.md#client-compatibility) says which, at what
+version, and where the edges are.
 
 ### 🎯 Native Oracle, no rewrite required
 
