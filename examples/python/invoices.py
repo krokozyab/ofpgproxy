@@ -42,7 +42,7 @@ def main() -> None:
                 # Every column can be NULL in real tenant data, and a demo that
                 # crashes on one is not a demo of anything.
                 shown_date = date.strftime("%Y-%m-%d") if date else ""
-                shown_amount = f"{amount:,.2f}" if amount is not None else ""
+                shown_amount = f"{amount:.2f}" if amount is not None else ""
                 # The number is truncated to its column; the amount is NOT.
                 # INVOICE_NUM is VARCHAR2(50) and a long one would push every
                 # column right, which reads as a bug in the proxy rather than

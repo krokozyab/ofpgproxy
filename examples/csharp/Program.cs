@@ -56,7 +56,7 @@ while (await reader.ReadAsync())
     // AMOUNT would be worse than a ragged table: a wrong figure on screen.
     if (number.Length > 24) number = number[..24];
     var date = reader.IsDBNull(1) ? "" : reader.GetDateTime(1).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-    var amount = reader.IsDBNull(2) ? "" : reader.GetDecimal(2).ToString("N2", CultureInfo.InvariantCulture);
+    var amount = reader.IsDBNull(2) ? "" : reader.GetDecimal(2).ToString("F2", CultureInfo.InvariantCulture);
 
     Console.WriteLine($"{number,-24} {date,-12} {amount,16}");
 }

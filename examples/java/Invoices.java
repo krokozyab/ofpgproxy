@@ -67,7 +67,11 @@ public class Invoices {
                     System.out.printf("%-24.24s %-12s %16s%n",
                             number == null ? "" : number,
                             date == null ? "" : date.toLocalDateTime().format(formatter),
-                            amount == null ? "" : amount.toPlainString());
+                            // Locale.ROOT so the decimal separator is a dot
+                            // wherever this runs — the other three demos print
+                            // locale-independently and the four outputs are
+                            // meant to be comparable.
+                            amount == null ? "" : String.format(java.util.Locale.ROOT, "%.2f", amount));
                 }
                 System.out.printf("%n%d row(s)%n", count);
             }

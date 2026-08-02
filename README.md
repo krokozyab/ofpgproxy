@@ -141,6 +141,7 @@ involving a client at all.
 | 📈 [**Observability**](doc/observability.md) | Prometheus `/metrics`, `/healthz`, `/readyz` |
 | 🗂️ [**Metadata catalog**](doc/metadata.md) | What the catalog holds, how it fills itself, and how to refresh it |
 | 🚑 [**Troubleshooting**](doc/troubleshooting.md) | Common errors, what they mean, and how to fix them |
+| 💻 [**Examples**](examples/) | Four runnable programs — Python, Java, C#, Go — reading the same ten invoices out of Fusion |
 
 ## 🕹️ How it feels in practice
 
@@ -151,6 +152,30 @@ Everything that speaks to an Oracle database just connects: SQLcl, DBeaver, SQL 
 **Your tools never find out it isn't a real database.**
 
 *Actively developed. Expect rough edges on exotic SQL shapes and unverified client/dialect combinations — `oratofusionproxy doctor --profiles` shows exactly what's covered today, and [Testing & verification](doc/testing.md) has the full matrix. Open an issue when you hit one.*
+
+## 💻 Reading Fusion from your own code
+
+Four small programs, one per ecosystem, that do the same thing: connect, read
+ten invoices out of `ap_invoices_all`, print them.
+
+| | driver | run |
+|---|---|---|
+| [Python](examples/python/) | `python-oracledb` (thin, pure Python) | `python invoices.py` |
+| [Java](examples/java/) | Oracle JDBC thin (`ojdbc11`) | `java -cp ojdbc11.jar Invoices.java` |
+| [C#](examples/csharp/) | `Oracle.ManagedDataAccess.Core` | `dotnet run` |
+| [Go](examples/go/) | `github.com/sijms/go-ora/v2` (pure Go) | `go run invoices.go` |
+
+**What matters is what is not in them.** No proxy-specific driver, no shim, no
+custom connector, no SDK — each one takes its language's ordinary Oracle client
+and hands it a host and a port. That is the entire claim this project makes,
+and these are the shortest honest way to show it.
+
+Two of those drivers are what real tools use underneath — ojdbc is SQL
+Developer and DBeaver, managed ODP.NET is Power BI and SSIS — so the demos also
+stand in for the paths most people actually arrive on. All four were run
+against a live Fusion tenant through the proxy and return the same rows.
+
+👉 **[All four, with setup notes](examples/)**
 
 ## ⚖️ Independence & trademarks
 
