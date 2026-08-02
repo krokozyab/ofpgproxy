@@ -81,6 +81,18 @@ New Connection → **Connection Type: Basic**:
 | Port | `1521` (or your `--oracle-listen` port) |
 | Service name | anything, e.g. `fusion` — pick **Service name**, not SID |
 
+<p align="center">
+  <img src="../assets/sql-developer-connection.png"
+       alt="SQL Developer's New / Select Database Connection dialog filled in for the proxy: Username fusion, Hostname 127.0.0.1, Port 1521, Service name fusion, with the Password field annotated as having to match ORACLE_WIRE_PASSWORD"
+       width="820">
+</p>
+
+The one field that has to be right is **Password**: it is the value you chose
+for `ORACLE_WIRE_PASSWORD` (or `--oracle-password`), not a Fusion password.
+Your Fusion credentials are configured on the proxy side and never travel from
+the client. Everything else in the dialog is free-form — the username, the
+service name, and the connection's own name are yours to pick.
+
 **Test** → *Success*, then **Connect**. SQL Developer runs some data-dictionary
 queries on connect; `ALL_*`/`USER_*`/`DBA_*` views are all answered locally
 from `metadata.db` (not sent to Fusion) — including the "Tables"/"Views" tree
