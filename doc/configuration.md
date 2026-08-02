@@ -31,6 +31,8 @@ Flags always win over environment variables. A few parameters are available only
 | `--metadata-refresh` | — | `0s` (off) | Re-read the tenant's table list on a timer. `SIGHUP` always triggers one. |
 | `--foreign-batch-size` | — | `200` | Rows per SOAP call when an **IDE client** runs a foreign SELECT without `LIMIT`. `0` disables auto-pagination (code clients always get a single shot). See [Clients — pagination](clients.md#pagination). |
 | `--soap-concurrency` | `FUSION_SOAP_CONCURRENCY` | `1` | Max concurrent SOAP calls to BI Publisher. Default `1` serialises all foreign SELECTs. Raise to `2`–`4` for IDE-heavy use; too high and the tenant refuses logins. See [SOAP concurrency](#soap-concurrency). |
+| `--listen` | `OFPG_LISTEN` | off | The **legacy PG-wire listener**. Unsupported since the Postgres frontend was dropped and off unless you ask for it — this is an Oracle-wire server. Listed here only because it appears in `--help`. |
+| `--log-level` | `OFPG_LOG_LEVEL` | `info` | `error` \| `warn` \| `info` \| `debug`. `info` reports what each client asks for; **`debug` adds every protocol step and is what a bug report wants**. |
 | `--log-queries` | — | `true` | One structured log entry per incoming query (kind, table, duration). Set `false` in production after tuning. |
 | `--translate-http` | — | off | `host:port` for the built-in offline SQL Translator playground (dev tool). Loopback only. See [SQL Translator playground](#sql-translator-playground). |
 
@@ -143,14 +145,22 @@ and `/readyz` (readiness). See [Observability](observability.md).
 
 ### `.env` file
 
-The proxy itself does **not** load `.env` automatically — source it before launching:
+The proxy reads `.env` itself. It looks beside the executable first, then in
+the working directory, and applies only what is not already in the
+environment — so an explicitly exported variable, or a flag, still wins.
+
+Just put `.env` next to the binary and run it:
 
 ```bash
-set -a; source .env; set +a
 ./oratofusionproxy
 ```
 
-A `make run`–style wrapper script that loads `.env` and passes `--metadata-path` is typically two lines — see [Quick Start](quickstart.md) for an example.
+There is nothing to source or export first, on any platform. (Earlier versions
+did require it, and this page said so; a `.env` beside a downloaded binary
+doing nothing was the reason it changed.)
+
+The format is deliberately plain: `KEY=VALUE` per line, `#` comments, blank
+lines ignored. No interpolation, no quoting rules, no multi-line values.
 
 ## Debug / development
 
@@ -159,6 +169,8 @@ These are **not** for production.
 | Variable | Effect |
 |---|---|
 | `OFPG_SOAP_DUMP=/path/to/file.xml` | Write every raw SOAP envelope to disk before parsing. Buffers the full response — do not leave enabled on large tables. Used when diagnosing a SOAP-shape mismatch. |
+| `FUSION_EXPLORER_CHROME_PATH=/path/to/chrome` | Where to find Chrome for `sso` mode. Only needed when it is not in one of the usual places — a portable install, or a machine where it is not on `PATH`. |
+| `OFPG_ORACLE_OJDBC_LOB_DOWNGRADE=1` | Send ojdbc clients (SQL Developer, DBeaver, SQLcl) their CLOBs inline and truncated at 32 767 characters instead of as real LOB locators. The locator path is the default and carries the whole value; this exists to fall back if a specific client version cannot read it. |
 | `OFPG_LOG_FULL_SQL=1` | Disable the ~2000-char truncation on SQL logged in `msg=parse` and `msg="foreign exec failed"` lines. BI-tool-generated queries (Power BI custom SQL, wide `SELECT *` imports) routinely blow past the default cap, hiding the part that actually errors. Leave off otherwise — full statements can be very large. |
 
 ## SOAP concurrency
