@@ -13,7 +13,7 @@ The last three are OAuth grants for **headless cloud deployments** — no browse
 
 Client-side credentials (what you type into SQLcl, DBeaver or SQL Developer) are a **separate, much simpler story** than the Fusion modes above:
 
-- Any username is accepted (use `FUSION`, uppercase, so IDE tree-browsing works — see [Connecting clients](clients.md#oracle-clients-sqlcl-dbeaver-sql-developer)), but the password **must be** the shared value you set with `--oracle-password` / `ORACLE_WIRE_PASSWORD`.
+- Any username is accepted and none is validated — every object is reported under one logical schema, `FUSION`, whoever you connect as. The password, though, **must be** the shared value you set with `--oracle-password` / `ORACLE_WIRE_PASSWORD`.
 
 All actual authentication against Oracle happens on the Fusion side using whichever mode you configured.
 

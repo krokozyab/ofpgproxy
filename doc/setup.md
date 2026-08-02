@@ -126,10 +126,10 @@ Every client needs the same three values, whatever it is:
 
 ### Two credential rules, because they are not the ones you expect
 
-- **Username `FUSION`, uppercase.** Any username authenticates, but every object
-  the proxy reports belongs to the single logical schema `FUSION`, and client
-  trees filter by owner. Connect as anything else and the table list renders
-  successfully and *empty*.
+- **Username: anything.** It is not validated and does not change what you
+  see. Every object the proxy reports belongs to one logical schema, `FUSION`,
+  whoever you log in as — the SQL `USER` function answers `FUSION` too. `fusion`
+  simply reads best.
 - **The password is yours, not Fusion's.** It is the value you invented in
   step 2. Your Fusion credentials are what the proxy uses on its own side, and
   clients never see them.

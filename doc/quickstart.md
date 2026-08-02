@@ -15,7 +15,21 @@ copy as `.env`.
 
 ## 1. Fill in `.env`
 
-Four lines are enough to start:
+Five lines are enough to start. Pick the auth mode you already have:
+
+**With a Fusion username and password** — nothing opens, nothing to click:
+
+```
+FUSION_HOST=fa-xxxx.oraclecloud.com
+FUSION_AUTH_TYPE=password
+FUSION_USER=your.fusion.user
+FUSION_PASSWORD=your-fusion-password
+OFPG_ORACLE_LISTEN=127.0.0.1:1521
+ORACLE_WIRE_PASSWORD=changeme
+```
+
+**With single sign-on** — a browser window opens once per run for your usual
+Fusion login:
 
 ```
 FUSION_HOST=fa-xxxx.oraclecloud.com
@@ -24,9 +38,14 @@ OFPG_ORACLE_LISTEN=127.0.0.1:1521
 ORACLE_WIRE_PASSWORD=changeme
 ```
 
-`ORACLE_WIRE_PASSWORD` is a value **you invent**. It is what every Oracle
-client will log in with — it is not a Fusion password and it is not checked
-against anything in your tenant.
+Four more modes exist for unattended running — see
+[Authentication](auth.md).
+
+**Two different passwords live in that file, and mixing them up is the
+commonest first stumble.** `FUSION_PASSWORD` is your real Fusion account
+password, used to reach the tenant. `ORACLE_WIRE_PASSWORD` is a value **you
+invent** here and now: it is what every Oracle client will log in to the
+proxy with, and it is checked against nothing in your tenant.
 
 Keep `.env` beside the binary. The proxy reads it on its own; there is nothing
 to export or source first.
@@ -41,8 +60,8 @@ to export or source first.
 .\oratofusionproxy.exe        # Windows
 ```
 
-With `FUSION_AUTH_TYPE=sso` a Chrome window opens for your usual Fusion login.
-Then:
+With `FUSION_AUTH_TYPE=sso` a Chrome window opens for your usual Fusion
+login; with `password` there is nothing to click. Either way:
 
 ```
 Oracle-wire (TNS) listening on 127.0.0.1:1521
@@ -77,7 +96,7 @@ out of your `.env`, and two are free:
 |---|---|
 | **Hostname** / **Port** | `OFPG_ORACLE_LISTEN` — `127.0.0.1:1521` in the example above |
 | **Password** | **`ORACLE_WIRE_PASSWORD`, exactly.** This is the one that catches people: it is not your Fusion password and not your Oracle password — it is the value you invented in `.env`. A wrong one is rejected at login. |
-| **Username** | Anything authenticates. Use **`FUSION`** — the object tree in SQL Developer and DBeaver filters by owner, and every object is reported under the single logical schema `FUSION`, so any other name shows an empty tree. |
+| **Username** | Anything. `fusion` reads best, but the value is not checked and does not affect what you see — every object is reported under one logical schema, `FUSION`, whoever you log in as. |
 | **Service name** | Anything. It is ignored. Pick **Service name**, though, not SID. |
 
 Real access control is the Fusion session the proxy holds underneath — the

@@ -98,9 +98,9 @@ Credential rules, which are not the ones you are used to:
 - **The password is `--oracle-password` / `ORACLE_WIRE_PASSWORD`** — the value
   *you* chose when starting the proxy. It is not a Fusion password and not an
   EBS password.
-- **The username is not validated.** Use `FUSION` (uppercase): every object the
-  proxy reports is owned by that single logical schema, so tooling that filters
-  by owner behaves.
+- **The username is not validated**, and does not affect what you see: every
+  object the proxy reports is owned by one logical schema, `FUSION`, whoever
+  you connect as.
 - Real access control is the Fusion session the proxy holds underneath — see
   [Fusion prerequisites](fusion-prerequisites.md).
 

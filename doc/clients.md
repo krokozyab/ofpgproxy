@@ -15,16 +15,14 @@ write.
 it and set it with `--oracle-password` / `ORACLE_WIRE_PASSWORD`, and the client
 must send that exact value:
 
-- **Username** — not validated (any value authenticates); real access control
-  is the Fusion session the proxy holds underneath. **Use `FUSION` specifically**
-  if you want IDE tree-browsing (SQL Developer, its VS Code extension, DBeaver's
-  Oracle driver) to actually show tables/views: every object the proxy reports
-  is owned by the single logical schema `FUSION`, and these tools default their
-  "Tables"/"Views" tree query to `WHERE OWNER = <your connected username>` —
-  entirely client-side, no server round trip — so any *other* username makes
-  the tree render successfully but empty (no error, just nothing under
-  Tables/Views). Ad-hoc `SELECT`s you type yourself aren't affected by this —
-  only the tree's own auto-generated catalog queries are.
+- **Username** — not validated, and it does not change what you see either.
+  Real access control is the Fusion session the proxy holds underneath. Every
+  object is reported under one logical schema, `FUSION`, whoever you connect
+  as: the tree tools ask the server which schema they are in
+  (`SYS_CONTEXT('USERENV','CURRENT_SCHEMA')`) and the SQL `USER` function their
+  other catalog queries use is answered server-side, and both say `FUSION`.
+  Verified by connecting as `FUSION`, `fusion` and `ZZZ` — identical trees.
+  `fusion` simply reads best in a connection list.
 - **Password** — **the value you set** in `--oracle-password` /
   `ORACLE_WIRE_PASSWORD` (there's no default — the proxy won't start the Oracle
   listener without one). A wrong password fails the O5LOGON mutual handshake.
@@ -41,9 +39,9 @@ import oracledb
 oracledb.connect(user="FUSION", password="changeme", dsn="127.0.0.1:1521/fusion")
 ```
 
-`FUSION` is the recommended username (any value authenticates — see the
-Username note above), `changeme` stands for **your** `--oracle-password` /
-`ORACLE_WIRE_PASSWORD` value, and the service name after `/` is arbitrary.
+The username is arbitrary (`fusion` reads well), `changeme` stands for **your**
+`--oracle-password` / `ORACLE_WIRE_PASSWORD` value, and the service name after
+`/` is arbitrary too.
 
 **Supported clients — thin AND thick drivers, each with its own verified
 scope.** The Oracle-wire frontend supports both: **thin** (pure-Java /
@@ -77,7 +75,7 @@ New Connection → **Connection Type: Basic**:
 
 | Field | Value |
 |---|---|
-| Username | **`FUSION`** — see the note above; anything else authenticates fine but leaves the Tables/Views tree empty |
+| Username | Anything — `fusion` reads best. Not validated, and it does not affect what you see |
 | Password | your `--oracle-password` value |
 | Hostname | `127.0.0.1` |
 | Port | `1521` (or your `--oracle-listen` port) |
@@ -87,8 +85,8 @@ New Connection → **Connection Type: Basic**:
 queries on connect; `ALL_*`/`USER_*`/`DBA_*` views are all answered locally
 from `metadata.db` (not sent to Fusion) — including the "Tables"/"Views" tree
 nodes' own `SYS.DBA_OBJECTS`-style queries. If the tree expands with **no
-error but an empty list**, the connection's username isn't `FUSION` — see the
-Username note above, not a bug to report.
+error but an empty list**, it is the catalog, not the username — see
+[Troubleshooting](troubleshooting.md#sql-developer--vs-code-extension-tree-expands-with-no-error-but-no-tablesviews-listed).
 
 ### sqlplus
 
@@ -170,10 +168,9 @@ see [Reading Fusion from EBS R12 over `dblink`](r12-dblink.md).
 ## GUI clients (DBeaver, DataGrip, JetBrains IDEs)
 
 Create an **Oracle** connection and use the same fields as
-[SQL Developer above](#sql-developer): Username **`FUSION`** (anything else
-authenticates but leaves the Tables/Views tree empty), Password = your
-`--oracle-password` / `ORACLE_WIRE_PASSWORD` value, host/port from
-`--oracle-listen`, service name anything.
+[SQL Developer above](#sql-developer): Username anything (`fusion` reads
+best), Password = your `--oracle-password` / `ORACLE_WIRE_PASSWORD` value,
+host/port from `--oracle-listen`, service name anything.
 
 - Tables appear under the single logical schema `FUSION`.
 - The tree, column lists and autocomplete are answered from the local metadata

@@ -27,8 +27,8 @@ won't connect:
   `--oracle-password` / `ORACLE_WIRE_PASSWORD`. A wrong value fails the
   O5LOGON mutual handshake, which some clients report unhelpfully (a dropped
   connection rather than a clean "invalid password"). The **username** is
-  *not* validated — but use `FUSION` (uppercase) so IDE tree-browsing works
-  (see [the empty-tree item below](#sql-developer--vs-code-extension-tree-expands-with-no-error-but-no-tablesviews-listed)).
+  *not* validated, and it does not affect what you see either: every object is
+  reported under one logical schema, `FUSION`, whoever you connect as.
 - `ORA-12537: TNS:connection closed` / `ORA-12541: TNS:no listener`-class
   errors, or a login that hangs then drops right after the data-type
   negotiation — almost always means the client asked for **encryption or
@@ -169,20 +169,27 @@ Sizing notes are in [Configuration → SOAP concurrency](configuration.md#soap-c
 
 ### SQL Developer / VS Code extension: tree expands with no error but no tables/views listed
 
-The connection's **username** isn't `FUSION`. SQL Developer's own "Tables"/"Views"
-tree nodes run a `SYS.DBA_OBJECTS`-style query filtered `WHERE OWNER = <your
-connected username>` — the client fills this in itself, client-side, from
-whatever username it authenticated with; it never asks the proxy what the
-"real" schema is. The proxy reports every object as owned by the single
-logical schema `FUSION` (see [Connecting clients → Oracle
-clients](clients.md#oracle-clients-sqlcl-dbeaver-sql-developer)), so any other
-username makes the tree query run successfully (no `ORA-` error) and just
-return zero rows.
+**It is not the username.** That advice used to live here and it was wrong:
+the connected name does not reach these queries at all. SQL Developer asks the
+server which schema it is in — `SYS_CONTEXT('USERENV','CURRENT_SCHEMA')` — and
+filters on the answer, and the SQL `USER` function its other tree queries use
+resolves server-side too. Both answer `FUSION` whoever you logged in as.
+Verified by connecting as `FUSION`, `fusion`, and `ZZZ`: identical trees, 22 147
+tables each.
 
-Fix: edit the connection and set **Username** to `FUSION` (the *password*
-stays your `--oracle-password` value — username isn't otherwise validated).
-Ad-hoc `SELECT`s you type yourself aren't affected either way — this only
-breaks the auto-generated tree-browsing queries.
+If the tree is genuinely empty, look at the catalog instead:
+
+- **A cold catalog.** On a first run with no `metadata-cache.db` the object
+  list is still being fetched; the client is shown one placeholder row saying
+  so rather than a bare empty tree. Wait for the warm to finish, or ship the
+  catalog from the release.
+- **A catalog for a different tenant.** Object lists are tenant-shaped;
+  flexfields and custom objects will not match. Rebuild it — see
+  [Metadata catalog](metadata.md).
+- **Something else entirely**, in which case the proxy log is the place to
+  look: every dictionary query it answers is logged with the row count it
+  returned, so an empty tree with `rows=0` in the log is a catalog problem and
+  an empty tree with no log line at all is a routing one.
 
 ### Empty schema tree, or a table with no columns
 

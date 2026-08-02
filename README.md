@@ -78,10 +78,9 @@ sql FUSION/changeme@//127.0.0.1:1521/fusion
 
 **The two credential rules**, because they are not the ones you expect:
 
-- **Username `FUSION`, uppercase.** Any username authenticates — but every
-  object the proxy reports is owned by the single logical schema `FUSION`, and
-  IDE trees filter by owner client-side. Connect as anything else and the
-  Tables/Views tree renders successfully and *empty*.
+- **Username: anything.** It is not validated and does not change what you
+  see. Every object the proxy reports is owned by one logical schema, `FUSION`,
+  whoever you log in as — the SQL `USER` function answers `FUSION` too.
 - **Password = your `--oracle-password` / `ORACLE_WIRE_PASSWORD` value.** This
   is the one thing that *is* validated. It is not your Fusion password: Fusion
   credentials are what the proxy uses on its own side (`--auth`), and clients
