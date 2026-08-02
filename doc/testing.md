@@ -55,7 +55,7 @@ merely *arrives* is not a pass; it has to match.
 | `sijms/go-ora` (pure Go) | TNS/TTC | Verified end-to-end — and the one client driven as a real client by the test suite on **every** build, not only in live runs |
 | ODP.NET **managed** — SSIS, SSRS, SSDT, .NET code | TNS/TTC | Verified end-to-end — every bind type and 600-column results |
 | Excel / Power Query — **unmanaged** ODP.NET | TNS/TTC | Loads Fusion tables end to end. One exception: a table with a `CLOB` column does not load — see below |
-| Power BI Desktop | TNS/TTC | Same unmanaged path as Excel, and expected to behave the same — but not separately exercised here, so it is not claimed as verified |
+| Power BI Desktop | TNS/TTC | Verified against a live tenant on Windows — the same unmanaged path as Excel, including the same `CLOB` exception |
 | `sqlplus` (Instant Client, OCI) | TNS/TTC | Verified end-to-end — login, describe, single- and multi-row fetch, LOB read |
 | Oracle Database via `CREATE DATABASE LINK` | TNS/TTC | Verified end-to-end from both a 19c and a 26ai initiator |
 

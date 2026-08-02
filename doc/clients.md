@@ -235,10 +235,10 @@ you need instead of `*` and it loads. Tools on the *managed* provider — SSIS,
 SSRS, SSDT — are unaffected. Details in
 [Troubleshooting](troubleshooting.md#excel--power-query-a-refresh-fails-with-no-message-on-one-particular-table).
 
-Coverage, stated honestly: Excel/Power Query on this path is verified against a
-live tenant, and so is managed ODP.NET. Power BI Desktop uses the same
-unmanaged client as Excel and is expected to behave the same, but it has not
-been exercised here — see [Testing & verification](testing.md#client-compatibility).
+Coverage: Excel/Power Query, Power BI Desktop and managed ODP.NET have each
+been run against a live tenant. Power BI Desktop behaves exactly as Excel does,
+`CLOB` limitation included — see
+[Testing & verification](testing.md#client-compatibility).
 
 ## Code clients
 

@@ -164,7 +164,7 @@ down to the capability and the evidence behind it.
 | `sijms/go-ora` (pure Go) | **Verified** | Driven as a real client on every build |
 | SSIS · SSRS · SSDT · .NET code — managed ODP.NET | **Verified** | Every bind type, 600-column results |
 | Excel · Power Query — unmanaged ODP.NET | **Partial** | A table with a `CLOB` column will not load — project it away |
-| Power BI Desktop | **Same path as Excel** | Unmanaged ODP.NET, like Excel; not separately exercised here |
+| Power BI Desktop | **Verified** | Same unmanaged path as Excel, same `CLOB` exception |
 | `sqlplus` (Instant Client) | **Verified** | No ANO / native encryption |
 
 Full matrix, versions and what is *not* covered: [Testing & verification](doc/testing.md).
