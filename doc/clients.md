@@ -192,6 +192,54 @@ host/port from `--oracle-listen`, service name anything.
   even on large tables, and more pages fetch as you scroll. Adjust with
   `--foreign-batch-size`.
 
+## Power BI, Excel and other Microsoft tools
+
+There is no connector to write and nothing of ours to install on the Windows
+side. Microsoft's tools reach an Oracle database through **Oracle's own client**
+— and as far as they are concerned, this proxy *is* an Oracle database.
+
+**Install [Oracle Client for Microsoft Tools](https://www.oracle.com/database/technologies/appdev/ocmt.html)**
+(free, from Oracle, a plain MSI). It installs and configures ODP.NET for Power
+BI Desktop, the Power BI service's on-premises data gateway, Excel, SSAS, SSIS,
+SSRS, SSDT and BizTalk. Match its bitness to your Office / Power BI install.
+
+Then connect with the same three values every other client uses:
+
+| Field | Value |
+|---|---|
+| Server / Data source | `127.0.0.1:1521/fusion` — host and port from `--oracle-listen`; the service name is ignored |
+| Username | anything, e.g. `fusion` |
+| Password | your `ORACLE_WIRE_PASSWORD` / `--oracle-password` value, **not** a Fusion password |
+
+- **Excel** — Data → Get Data → From Database → From Oracle Database.
+- **Power BI Desktop** — Home → Get Data → Oracle database.
+
+Both then let you either pick tables from the list or paste a SQL statement.
+
+**Prefer Import over DirectQuery.** Every query is a BI Publisher report
+execution taking seconds, so a DirectQuery report that issues one query per
+visual will feel broken. Import a bounded result and refresh it on a schedule.
+Bound it in the SQL statement box while you are there:
+
+```sql
+SELECT invoice_num, invoice_date, invoice_amount
+FROM   ap_invoices_all
+WHERE  invoice_date >= DATE '2026-01-01'
+  AND  ROWNUM <= 50000
+```
+
+**One limitation to know before you hit it: a table with a `CLOB` column will
+not load.** Excel and Power BI Desktop use the *unmanaged* ODP.NET provider,
+and on that path the refresh dies with no useful message. Select the columns
+you need instead of `*` and it loads. Tools on the *managed* provider — SSIS,
+SSRS, SSDT — are unaffected. Details in
+[Troubleshooting](troubleshooting.md#excel--power-query-a-refresh-fails-with-no-message-on-one-particular-table).
+
+Coverage, stated honestly: Excel/Power Query on this path is verified against a
+live tenant, and so is managed ODP.NET. Power BI Desktop uses the same
+unmanaged client as Excel and is expected to behave the same, but it has not
+been exercised here — see [Testing & verification](testing.md#client-compatibility).
+
 ## Code clients
 
 ### python-oracledb (thin)

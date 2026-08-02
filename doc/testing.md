@@ -53,8 +53,9 @@ merely *arrives* is not a pass; it has to match.
 | python-oracledb (thin) | TNS/TTC | Verified end-to-end against live Fusion |
 | SQL Developer / SQLcl / DBeaver (ojdbc thin) | TNS/TTC | Verified end-to-end, incl. IDE tree browsing and result-grid scrolling |
 | `sijms/go-ora` (pure Go) | TNS/TTC | Verified end-to-end — and the one client driven as a real client by the test suite on **every** build, not only in live runs |
-| ODP.NET **managed** (Power BI, SSIS) | TNS/TTC | Verified end-to-end — every bind type and 600-column results |
-| Excel / Power Query (unmanaged OCI) | TNS/TTC | Loads Fusion tables end to end. One exception: a table with a `CLOB` column does not load — see below |
+| ODP.NET **managed** — SSIS, SSRS, SSDT, .NET code | TNS/TTC | Verified end-to-end — every bind type and 600-column results |
+| Excel / Power Query — **unmanaged** ODP.NET | TNS/TTC | Loads Fusion tables end to end. One exception: a table with a `CLOB` column does not load — see below |
+| Power BI Desktop | TNS/TTC | Same unmanaged path as Excel, and expected to behave the same — but not separately exercised here, so it is not claimed as verified |
 | `sqlplus` (Instant Client, OCI) | TNS/TTC | Verified end-to-end — login, describe, single- and multi-row fetch, LOB read |
 | Oracle Database via `CREATE DATABASE LINK` | TNS/TTC | Verified end-to-end from both a 19c and a 26ai initiator |
 
@@ -150,11 +151,12 @@ are themselves tested.
 
 Stated plainly, so nobody discovers these the hard way:
 
-- **`CLOB` through Excel / Power Query.** The unmanaged OCI client those use
-  stops mid-result on a table that has a `CLOB` column, and the refresh fails
-  with no useful message. Everything else about Power Query works, and every
-  other client — ojdbc, managed ODP.NET, thin — reads the same column fine.
-  Project the column away, or read that table from a different client.
+- **`CLOB` through Excel and Power BI Desktop.** Both use the *unmanaged*
+  ODP.NET provider, which stops mid-result on a table that has a `CLOB` column;
+  the refresh fails with no useful message. Everything else on that path works,
+  and every other client — ojdbc, *managed* ODP.NET (SSIS/SSRS/SSDT), thin —
+  reads the same column fine. Project the column away, or read that table from
+  a different client.
 - **Bind variables and >255-column projections through classic OCI.** They
   work on the thin drivers and on `dblink`; on the classic-OCI `sqlplus` path
   neither has a live capture behind it, so both are refused rather than

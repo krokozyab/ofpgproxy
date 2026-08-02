@@ -100,13 +100,18 @@ heavy query does not immediately free tenant capacity.
 | `LONG` / `LONG RAW` | Streamed inline, one row per fetch round |
 | `RAW` | Inline, byte length taken from the catalog |
 
-**One client cannot read a `CLOB` at all: Excel / Power Query.** It uses the
-unmanaged OCI client, and a table with a `CLOB` column does not load — the
-query runs, the first batch goes out, and the client then sends nothing and
-times out. Every other client reads the same column of the same table fine,
-including ojdbc and managed ODP.NET (so Power BI is unaffected). The workaround
-is to project the column away. See
-[Troubleshooting](troubleshooting.md) for the symptom as it appears in Excel.
+**A `CLOB` column stops Excel and Power BI Desktop.** Both use **unmanaged**
+ODP.NET — that is what Oracle's own
+[Client for Microsoft Tools](https://www.oracle.com/database/technologies/appdev/ocmt.html)
+installs for them — and on that path a table with a `CLOB` column does not
+load: the query runs, the first batch goes out, and the client then sends
+nothing and times out. Project the column away and the same table loads.
+
+Not a CLOB problem in general. Every other client reads the same column of the
+same table fine, including ojdbc and **managed** ODP.NET — which is what OCMT
+installs for SSIS, SSRS and SSDT, so those are unaffected. See
+[Troubleshooting](troubleshooting.md#excel--power-query-a-refresh-fails-with-no-message-on-one-particular-table)
+for the symptom as it appears in Excel.
 
 One exception worth knowing: ojdbc-family drivers can be switched to an
 inline-`VARCHAR2` fallback for LOBs (`OFPG_ORACLE_OJDBC_LOB_DOWNGRADE=1`),

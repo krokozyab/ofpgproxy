@@ -217,10 +217,11 @@ closed`).
 
 - **Project the column away.** `SELECT` the columns you need instead of `*`,
   and the same table loads.
-- **Or read that table from another client.** This is specific to unmanaged
-  OCI. ojdbc (DBeaver, SQL Developer) and managed ODP.NET read the same column
-  of the same table fine — a Power BI report using the managed provider is not
-  affected.
+- **Or read that table from another client.** This is specific to the
+  **unmanaged** provider, which is what Oracle's Client for Microsoft Tools
+  installs for Excel, Power BI Desktop, the Power BI service and SSAS. ojdbc
+  (DBeaver, SQL Developer) and **managed** ODP.NET — what the same installer
+  gives SSIS, SSRS and SSDT — read the same column of the same table fine.
 
 `FND_VIEWS` is the one people hit first, because its `TEXT` column holds whole
 view bodies. Note this is not a size problem to work around by asking for

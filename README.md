@@ -1,7 +1,8 @@
 <div align="center">
   <h1>✨ oratofusionproxy</h1>
-  <p><strong>Query Oracle Fusion Cloud with the Oracle clients you already have — SQLcl, DBeaver, SQL Developer, ojdbc, python-oracledb, and a real Oracle database's own <code>dblink</code>.</strong></p>
-  <p>One binary between your existing Oracle tooling and a SaaS tenant that only speaks SOAP.</p>
+  <p><strong>Query Oracle Fusion Cloud with the tools you already have — Excel and Power BI, SQL Developer, DBeaver, SQLcl, ojdbc, python-oracledb, and a real Oracle database's own <code>dblink</code>.</strong></p>
+  <p>One binary between your existing tooling and a SaaS tenant that only speaks SOAP.<br />
+  Nothing to install on the client side that Oracle does not already ship.</p>
 
   <br />
 
@@ -34,7 +35,7 @@ Oracle Fusion Cloud's BI Publisher web service is the documented way to run ad-h
 flowchart LR
     subgraph L["<b>Oracle clients you already have</b>"]
         A["<b>SQL editors &amp; IDEs</b><br/>SQL Developer · DBeaver · SQLcl · sqlplus"]
-        B["<b>BI &amp; spreadsheets</b><br/>Power BI · Excel"]
+        B["<b>BI &amp; spreadsheets</b><br/>Excel · Power BI · SSIS<br/>via Oracle Client for Microsoft Tools"]
         C["<b>Your own code</b><br/>ojdbc · python-oracledb · ODP.NET · go-ora"]
         D["<b>Another Oracle database</b><br/>CREATE DATABASE LINK · EBS R12 · 19c · 23ai/26ai"]
     end
@@ -73,6 +74,7 @@ Point existing Oracle tooling straight at Fusion — nothing to port:
 
 * **Reuse the Oracle stack you already have:** reconcile an EBS (or any Oracle) database against Fusion straight over its own `dblink` — [step-by-step for R12](doc/r12-dblink.md), and no Database Gateway or `dg4odbc` involved — pull Fusion data into OIC flows and existing PL/SQL, run your `sqlplus` scripts and SQL Developer habits — all unchanged. Cut out the staging tables, nightly exports, and throwaway integrations you'd otherwise build just to move the data around.
 * **Stop fighting the reporting bottleneck:** query the tenant directly from the client you already have, instead of waiting weeks for a custom pipeline or authoring a BI Publisher report per question.
+* **Excel and Power BI, straight at the tenant:** no CSV exports, no OTBI Logical SQL, no per-question BI Publisher report. Install Oracle's own free [Client for Microsoft Tools](https://www.oracle.com/database/technologies/appdev/ocmt.html) — the one Oracle publishes for Power BI Desktop, Excel, SSAS, SSIS, SSRS and SSDT — point it at the proxy, and write ordinary `SELECT`s against Fusion tables. Nothing custom in between: it is Oracle's client talking a real Oracle port. ([How to connect](doc/clients.md#power-bi-excel-and-other-microsoft-tools))
 * **Keep the tools you already know:** the Oracle client families in the [compatibility matrix](doc/testing.md#client-compatibility) connect natively — SQL Developer, DBeaver, SQLcl, ojdbc, python-oracledb, managed ODP.NET, `sqlplus`, `dblink`. Nothing new to learn, no SDK, no custom integration.
 
 ## 🚀 Five-minute local start
@@ -160,8 +162,9 @@ down to the capability and the evidence behind it.
 | Oracle Database via `dblink` — 19c and 23ai/26ai | **Verified** | Both TTC generations, driven from real servers |
 | python-oracledb (thin) | **Verified** | |
 | `sijms/go-ora` (pure Go) | **Verified** | Driven as a real client on every build |
-| Power BI · SSIS — managed ODP.NET | **Verified** | Every bind type, 600-column results |
-| Excel · Power Query — unmanaged OCI | **Partial** | A table with a `CLOB` column will not load — project it away |
+| SSIS · SSRS · SSDT · .NET code — managed ODP.NET | **Verified** | Every bind type, 600-column results |
+| Excel · Power Query — unmanaged ODP.NET | **Partial** | A table with a `CLOB` column will not load — project it away |
+| Power BI Desktop | **Same path as Excel** | Unmanaged ODP.NET, like Excel; not separately exercised here |
 | `sqlplus` (Instant Client) | **Verified** | No ANO / native encryption |
 
 Full matrix, versions and what is *not* covered: [Testing & verification](doc/testing.md).
@@ -229,7 +232,8 @@ and hands it a host and a port. That is the entire claim this project makes,
 and these are the shortest honest way to show it.
 
 Two of those drivers are what real tools use underneath — ojdbc is SQL
-Developer and DBeaver, managed ODP.NET is Power BI and SSIS — so the demos also
+Developer and DBeaver, ODP.NET is what Oracle's Client for Microsoft Tools puts
+under Excel, Power BI and SSIS — so the demos also
 stand in for the paths most people actually arrive on. All four were run
 against a live Fusion tenant through the proxy and return the same rows.
 
