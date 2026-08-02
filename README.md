@@ -5,9 +5,21 @@
 
   <br />
 
-  <a href="https://github.com/krokozyab/oracle-fusion-tns-proxy/releases/latest"><img src="https://img.shields.io/badge/download-latest-success?style=flat-square&logo=github" alt="Latest release" /></a>
+  <a href="https://github.com/krokozyab/oracle-fusion-tns-proxy/releases/latest"><img src="https://img.shields.io/badge/Download-Windows-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Download for Windows" /></a>
+  <a href="https://github.com/krokozyab/oracle-fusion-tns-proxy/releases/latest"><img src="https://img.shields.io/badge/Download-Linux-1793D1?style=for-the-badge&logo=linux&logoColor=white" alt="Download for Linux" /></a>
+  <a href="https://github.com/krokozyab/oracle-fusion-tns-proxy/releases/latest"><img src="https://img.shields.io/badge/Download-macOS_Apple_Silicon-000000?style=for-the-badge&logo=apple&logoColor=white" alt="Download for macOS Apple Silicon" /></a>
+
+  <br />
+
+  <sub>Each archive is the binary, a pre-built metadata catalog and an <code>.env.example</code> — nothing else to install.<br />
+  Checksums in <code>SHA256SUMS</code> · <a href="doc/quickstart.md">Quick Start</a> · <a href="#-which-clients-are-verified">Verified clients</a> · <a href="#-trust--security">Trust &amp; security</a></sub>
+
+  <br />
+  <br />
+
   <img src="https://img.shields.io/badge/Oracle_Net-TNS%2FTTC-F80000?style=flat-square&logo=oracle&logoColor=white" alt="Oracle Net (TNS/TTC)" />
   <img src="https://img.shields.io/badge/Oracle_Fusion-Supported-F80000?style=flat-square&logo=oracle&logoColor=white" alt="Oracle Fusion" />
+  <img src="https://img.shields.io/badge/read--only-by_design-2e8b57?style=flat-square" alt="Read-only by design" />
   <!--[![GitHub Downloads](https://img.shields.io/github/downloads/krokozyab/oracle-fusion-tns-proxy/total?style=for-the-badge&logo=github)](https://github.com/krokozyab/oracle-fusion-tns-proxy/releases)-->
 
   <br />
@@ -136,6 +148,41 @@ involving a client at all.
 * 🔒 **Read-only by design.** BI Publisher can't write, and neither will the proxy. No accidental DML. Sleep soundly.
 * 🩺 **Built-in `doctor`.** `oratofusionproxy doctor` validates config, catalog health and Fusion reachability — and reports exactly which Oracle client/dialect combinations this build has verified — before you ever point a real client at it. [Details](doc/configuration.md#oratofusionproxy-doctor).
 
+## ✅ Which clients are verified
+
+Not a wish list — each row was driven against a live Fusion tenant, and the
+shipping binary can print this itself with `oratofusionproxy doctor --profiles`,
+down to the capability and the evidence behind it.
+
+| Client | Status | Worth knowing |
+|---|---|---|
+| SQL Developer · DBeaver · SQLcl · ojdbc | **Verified** | Tree browsing and result-grid scrolling included |
+| Oracle Database via `dblink` — 19c and 23ai/26ai | **Verified** | Both TTC generations, driven from real servers |
+| python-oracledb (thin) | **Verified** | |
+| `sijms/go-ora` (pure Go) | **Verified** | Driven as a real client on every build |
+| Power BI · SSIS — managed ODP.NET | **Verified** | Every bind type, 600-column results |
+| Excel · Power Query — unmanaged OCI | **Partial** | A table with a `CLOB` column will not load — project it away |
+| `sqlplus` (Instant Client) | **Verified** | No ANO / native encryption |
+
+Full matrix, versions and what is *not* covered: [Testing & verification](doc/testing.md).
+
+## 🎯 Is this the right tool for your job?
+
+| Good fit | Not a fit |
+|---|---|
+| Ad-hoc analysis and support investigations | Extracting millions of rows |
+| EBS ↔ Fusion reconciliation over `dblink` | Replacing BICC for a data warehouse |
+| Migration and cutover validation | A dashboard refreshing every 30 seconds |
+| Existing Oracle SQL, scripts and applications | Many users needing *different* Fusion identities |
+| Browsing tenant tables from an IDE | An untrusted network with no tunnel |
+
+**What will people see through it?** One answer, so nobody is surprised by it
+later: every client through one proxy process shares **one** Fusion identity —
+the credentials that process was started with. Access is whatever that Fusion
+account can read through BI Publisher. The proxy adds no row-level security of
+its own, serves one tenant per process, and is not a way around Fusion's own
+access control.
+
 ## 📖 Documentation
 
 | Guide | Description |
@@ -187,6 +234,54 @@ stand in for the paths most people actually arrive on. All four were run
 against a live Fusion tenant through the proxy and return the same rows.
 
 👉 **[All four, with setup notes](examples/)**
+
+## 🔐 Trust & security
+
+This tool is handed your Fusion credentials, so the questions your security
+review will ask are answered here rather than somewhere in the docs.
+
+**What it is.** A single closed-source binary. There is no source release; what
+you can verify instead is behaviour — `doctor` reports what it will do before
+you point a client at it, `doctor --profiles` prints the build's own verified
+capability list, and every release ships `SHA256SUMS`:
+
+```bash
+sha256sum -c SHA256SUMS          # Linux
+shasum -a 256 -c SHA256SUMS      # macOS
+```
+
+**Where your data goes.** Two destinations, both yours: your tenant's BI
+Publisher endpoint (`https://<your-host>/xmlpserver/services/…`), and — only if
+you configure an OAuth or SSO mode — your own identity provider's token
+endpoint. There is no other outbound connection, no update check, and **no
+telemetry or analytics of any kind** anywhere in the binary.
+
+**What touches the disk.** The metadata catalog beside the binary, which holds
+*schema* only: table, column, primary-key and module names from your tenant's
+`FND_*` dictionary. No query results are written to it, or anywhere else — with
+one deliberate exception you have to switch on yourself, the diagnostic bundle
+(`--oracle-diagnostic-dir`), which records protocol traffic for a bug report and
+with `--oracle-diagnostic-raw` includes the raw bytes. Treat a bundle as
+sensitive and read it before sending it.
+
+**Credentials.** Fusion credentials live only in the proxy's own configuration
+and are never sent to a client. What clients send is a separate password you
+invent (`ORACLE_WIRE_PASSWORD`) — losing it exposes the proxy, not your tenant
+login. SSO refresh tokens are held in memory and never written to disk.
+
+**The real limitation, stated plainly: there is no transport encryption on the
+Oracle-wire side.** No TLS, no Oracle Advanced Networking, in any client
+profile. The supported posture is a loopback listener, or a network you already
+trust — put SSH or a VPN in between if it is not. The proxy warns at startup
+when its listener leaves loopback. Fusion side is ordinary HTTPS.
+
+**Read-only, structurally.** BI Publisher cannot write, so no client can — DML
+and DDL are refused with `ORA-16000` before reaching the tenant. There is no
+flag that relaxes this.
+
+**Access.** One process, one Fusion identity, one tenant — see
+[Is this the right tool for your job?](#-is-this-the-right-tool-for-your-job)
+above.
 
 ## ⚖️ Independence & trademarks
 
