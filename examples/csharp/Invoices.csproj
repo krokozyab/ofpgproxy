@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Invoices</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Oracle's managed driver: pure .NET, no Instant Client needed. The
+         same package Power BI and SSIS use to reach Oracle. -->
+    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.9.0" />
+  </ItemGroup>
+
+</Project>
