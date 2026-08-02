@@ -279,6 +279,13 @@ when its listener leaves loopback. Fusion side is ordinary HTTPS.
 and DDL are refused with `ORA-16000` before reaching the tenant. There is no
 flag that relaxes this.
 
+**Licensing.** Free to evaluate — including a proof of concept inside a
+company — and free for personal, academic and other non-commercial use, with no
+key and no time limit. Running it in production or otherwise in the course of
+commercial activity needs a paid licence; open an issue and ask. The full terms
+are in [LICENSE](LICENSE), and reporting a vulnerability is in
+[SECURITY.md](SECURITY.md).
+
 **Access.** One process, one Fusion identity, one tenant — see
 [Is this the right tool for your job?](#-is-this-the-right-tool-for-your-job)
 above.

@@ -1,0 +1,80 @@
+# oratofusionproxy — Licence Agreement
+
+Copyright © 2026 Sergey Rudenko. All rights reserved.
+
+This is proprietary software distributed in binary form. Reading it in full
+takes two minutes, and the short version is: try it freely, pay to run it in
+production.
+
+## 1. What this covers
+
+"Software" means the `oratofusionproxy` binary, the metadata catalog file and
+the `.env.example` distributed with it, and the accompanying documentation.
+
+## 2. What you may do without paying
+
+You are granted a free, non-exclusive, non-transferable, revocable licence to
+install and use the Software for:
+
+- **evaluation** — trying it against your own Oracle Fusion tenant, including a
+  proof of concept inside a company;
+- **personal use**;
+- **academic, research and teaching use**;
+- any other **non-commercial** purpose.
+
+No registration, no key, no time limit.
+
+## 3. What requires a paid licence
+
+Using the Software in **production**, or otherwise **in the course of
+commercial activity** — including running it as part of a business's internal
+operations, using it to deliver services to clients, or embedding it in a
+commercial product or service — requires a separate paid licence.
+
+If you are not sure which side of the line you are on, ask before deploying.
+Open an issue on the project's GitHub repository, or contact the copyright
+holder through it.
+
+## 4. What you may not do
+
+Regardless of which licence applies, you may not:
+
+- redistribute, publish, sell, rent, lease or sublicense the Software, or make
+  it available to third parties as a hosted or managed service;
+- modify, adapt, translate or create derivative works of the Software;
+- reverse-engineer, decompile or disassemble the Software, or attempt to derive
+  its source code, except to the extent this restriction is unenforceable under
+  applicable law;
+- remove or alter any copyright, trademark or other proprietary notice.
+
+## 5. No warranty
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+
+The Software reads data from your Oracle Fusion tenant on your behalf, using
+credentials you supply. You are responsible for the queries you run through it
+and for the security of the environment you run it in.
+
+## 6. Limitation of liability
+
+IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+## 7. Your own Oracle agreements
+
+The Software is an independent, third-party tool. It is not affiliated with,
+endorsed by or supported by Oracle Corporation, and it bundles no Oracle
+software. It reads your tenant only through Oracle's own documented BI
+Publisher web service, authenticating with credentials you supply.
+
+You remain responsible for using the Software in accordance with your Oracle
+Cloud subscription terms, your licence agreements and applicable law.
+
+## 8. Termination
+
+This licence terminates automatically if you breach it. On termination you must
+stop using the Software and delete your copies.
