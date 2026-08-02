@@ -205,6 +205,27 @@ it — watch for a `metadata: cached N columns of <TABLE>` log line. If instead
 you see `has no columns in the tenant catalog`, that object genuinely isn't in
 `FND_COLUMNS`, which is also true of views. See [Metadata catalog](metadata.md).
 
+### Excel / Power Query: a refresh fails with no message on one particular table
+
+Look for a `CLOB` column in it. Excel and Power BI Desktop's Power Query use
+the **unmanaged** OCI client, and that client stops mid-result on a `CLOB`: the
+query runs, the first 25-row batch goes out, and then it sends nothing and
+gives up several seconds later on its own timeout. In Excel it looks like a
+failed refresh with nothing to go on; the proxy log shows the batch leaving
+and the connection closing (`wsarecv: An existing connection was forcibly
+closed`).
+
+- **Project the column away.** `SELECT` the columns you need instead of `*`,
+  and the same table loads.
+- **Or read that table from another client.** This is specific to unmanaged
+  OCI. ojdbc (DBeaver, SQL Developer) and managed ODP.NET read the same column
+  of the same table fine — a Power BI report using the managed provider is not
+  affected.
+
+`FND_VIEWS` is the one people hit first, because its `TEXT` column holds whole
+view bodies. Note this is not a size problem to work around by asking for
+fewer rows: the client chokes on the column's shape, not on the volume.
+
 ### SSO keeps reopening Chrome
 
 Refresh tokens are not persisted to disk, and the proxy automatically relaunches Chrome whenever silent refresh fails past expiry — so Chrome popping back up is the intended recovery path, not a bug.

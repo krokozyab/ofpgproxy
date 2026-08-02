@@ -92,7 +92,7 @@ Four tables, all populated from Fusion's `FND_TABLES` / `FND_VIEWS` /
 | `cached_tables` | ~30 000 | one row per table/view (name, module, type) |
 | `cached_columns` | ~1 200 000 | one row per column (name, Oracle type, width, nullability) |
 | `cached_primary_keys` | ~40 000 | PK columns for join discovery |
-| `cached_modules` | a few hundred | Fusion module index used for schema naming |
+| `cached_modules` | ~8 600 | Fusion module index used for schema naming |
 
 Sizes are typical — your tenant may differ. A self-populated cache holds only
 what has actually been asked for, which is normally far less.

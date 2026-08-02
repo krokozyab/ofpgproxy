@@ -29,8 +29,8 @@ bookkeeping, and the proxy implements both — see
 
 ## How it's verified
 
-**1. Byte-exact protocol tests.** Over 400 Go tests cover the Oracle-wire
-implementation alone. Most of them are not "does it round-trip" tests — they
+**1. Byte-exact protocol tests.** Over 550 Go tests cover the Oracle-wire
+implementation alone, out of more than 1 000 in the build. Most of them are not "does it round-trip" tests — they
 assert the exact bytes the proxy puts on the socket against captures taken
 from a **real Oracle server** answering the same query. Where a client's
 behaviour depends on a field nobody documents, the field's value came from a
@@ -52,8 +52,18 @@ merely *arrives* is not a pass; it has to match.
 |---|---|---|
 | python-oracledb (thin) | TNS/TTC | Verified end-to-end against live Fusion |
 | SQL Developer / SQLcl / DBeaver (ojdbc thin) | TNS/TTC | Verified end-to-end, incl. IDE tree browsing and result-grid scrolling |
+| `sijms/go-ora` (pure Go) | TNS/TTC | Verified end-to-end — and the one client driven as a real client by the test suite on **every** build, not only in live runs |
+| ODP.NET **managed** (Power BI, SSIS) | TNS/TTC | Verified end-to-end — every bind type and 600-column results |
+| Excel / Power Query (unmanaged OCI) | TNS/TTC | Loads Fusion tables end to end. One exception: a table with a `CLOB` column does not load — see below |
 | `sqlplus` (Instant Client, OCI) | TNS/TTC | Verified end-to-end — login, describe, single- and multi-row fetch, LOB read |
 | Oracle Database via `CREATE DATABASE LINK` | TNS/TTC | Verified end-to-end from both a 19c and a 26ai initiator |
+
+Coverage is not uniform across that list, and the per-client detail is not a
+matter of opinion: **`oratofusionproxy doctor --profiles` prints the shipping
+build's own compatibility registry** — every client profile, every capability,
+and whether each is verified, experimental or unsupported, with the evidence
+naming the test or the live run behind it. That output, not this page, is the
+authoritative answer for a specific client.
 
 Connection details and per-client caveats live in
 [Connecting clients](clients.md).
@@ -140,6 +150,15 @@ are themselves tested.
 
 Stated plainly, so nobody discovers these the hard way:
 
+- **`CLOB` through Excel / Power Query.** The unmanaged OCI client those use
+  stops mid-result on a table that has a `CLOB` column, and the refresh fails
+  with no useful message. Everything else about Power Query works, and every
+  other client — ojdbc, managed ODP.NET, thin — reads the same column fine.
+  Project the column away, or read that table from a different client.
+- **Bind variables and >255-column projections through classic OCI.** They
+  work on the thin drivers and on `dblink`; on the classic-OCI `sqlplus` path
+  neither has a live capture behind it, so both are refused rather than
+  guessed at. `doctor --profiles` marks them `unsupported` on that profile.
 - **Thick-client Advanced Networking (ANO/native encryption).** `sqlplus` and
   other OCI clients work in the configurations listed above; a client
   *forcing* Oracle Advanced Networking negotiation is not supported.

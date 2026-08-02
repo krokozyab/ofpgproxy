@@ -39,6 +39,12 @@ Oracle-wire frontend.
 | `orawire_protocol_timeouts_total` | counter | Protocol watchdog timeouts — a strict request/response transition (handshake, dblink round1→sync3→round2→fetch) the client never completed. See [Configuration → Protocol watchdog & diagnostics](configuration.md#protocol-watchdog--diagnostics). |
 | `orawire_diagnostic_bundles_total` | counter | Diagnostic `.zip` bundles written. |
 | `orawire_diagnostic_bundle_errors_total` | counter | Diagnostic bundle writes that failed (logged, never fatal). |
+| `orawire_metadata_fetches_total` | counter | On-demand metadata fetches attempted — one per table whose columns were missing from the catalog. |
+| `orawire_metadata_fetch_errors_total` | counter | On-demand metadata fetches that failed. |
+| `orawire_metadata_columns_cached_total` | counter | Column rows written into the local catalog by those fetches. |
+| `orawire_metadata_absent_total` | counter | Tables a client asked about that the tenant catalog does not have. A climbing number here usually means a client polling for something that will never exist. |
+| `orawire_metadata_bootstraps_total` | counter | Bulk table-list fetches started. |
+| `orawire_metadata_bootstrap_running` | gauge | `1` while the bulk table-list fetch is running. This is the one to watch on a fresh cache — see [Metadata](metadata.md#it-fills-itself). |
 | `orawire_compatibility_warnings_total` | counter | Connections whose resolved Oracle-wire compatibility profile is not fully verified (experimental/unsupported/unknown) — run `oratofusionproxy doctor --profiles` for the full breakdown. No driver-name/conn-ID labels; check connection logs or a diagnostic bundle's `compat_profile`/`compat_support` fields for which client. |
 
 Example scrape:

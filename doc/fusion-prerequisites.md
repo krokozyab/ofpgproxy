@@ -125,9 +125,10 @@ the same config the proxy will. If it passes, the account has what it needs —
 no role audit required:
 
 ```bash
-set -a; source .env; set +a
 ./oratofusionproxy doctor
 ```
+
+It reads the `.env` sitting beside it, so there is nothing to source first.
 
 - `fusion.auth_and_report` **PASS** — the account authenticated, the report
   path resolved, and BI Publisher executed it. All three requirements are met.
