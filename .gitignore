@@ -1,0 +1,11 @@
+# macOS / editors
+.DS_Store
+.idea/
+*.iml
+.vscode/
+
+# build output of the examples — dotnet's includes Oracle.ManagedDataAccess.dll,
+# and this repository bundles no Oracle software
+examples/csharp/bin/
+examples/csharp/obj/
+examples/python/__pycache__/

@@ -1,6 +1,4 @@
 <div align="center">
-  <img src="assets/hero.png" alt="oratofusionproxy" width="800" />
-
   <h1>✨ oratofusionproxy</h1>
   <p><strong>Query Oracle Fusion Cloud with the Oracle clients you already have — SQLcl, DBeaver, SQL Developer, ojdbc, python-oracledb, and a real Oracle database's own <code>dblink</code>.</strong></p>
   <p>One binary between your existing Oracle tooling and a SaaS tenant that only speaks SOAP.</p>
@@ -21,7 +19,7 @@
   <br />
 </div>
 
-Oracle Fusion Cloud's BI Publisher is the only sanctioned read-path out of a SaaS tenant. It speaks SOAP, returns base64-wrapped XML — and every Oracle client you already own (SQLcl, DBeaver, a reconciliation script over `dblink`, an ojdbc-based service) expects the real Oracle wire protocol instead.
+Oracle Fusion Cloud's BI Publisher web service is the documented way to run ad-hoc SQL against a SaaS tenant. It speaks SOAP, returns base64-wrapped XML — and the Oracle clients you already own (SQLcl, DBeaver, a reconciliation script over `dblink`, an ojdbc-based service) expect the real Oracle wire protocol instead.
 
 **`oratofusionproxy` sits between them and makes them agree.**
 
@@ -53,9 +51,12 @@ Point existing Oracle tooling straight at Fusion — nothing to port:
 
 * **Reuse the Oracle stack you already have:** reconcile an EBS (or any Oracle) database against Fusion straight over its own `dblink` — [step-by-step for R12](doc/r12-dblink.md), and no Database Gateway or `dg4odbc` involved — pull Fusion data into OIC flows and existing PL/SQL, run your `sqlplus` scripts and SQL Developer habits — all unchanged. Cut out the staging tables, nightly exports, and throwaway integrations you'd otherwise build just to move the data around.
 * **Stop fighting the reporting bottleneck:** query the tenant directly from the client you already have, instead of waiting weeks for a custom pipeline or authoring a BI Publisher report per question.
-* **Keep the tools you already know:** every Oracle client you own connects natively. Nothing new to learn, no SDK, no custom integration.
+* **Keep the tools you already know:** the Oracle client families in the [compatibility matrix](doc/testing.md#client-compatibility) connect natively — SQL Developer, DBeaver, SQLcl, ojdbc, python-oracledb, managed ODP.NET, `sqlplus`, `dblink`. Nothing new to learn, no SDK, no custom integration.
 
-## 🚀 60-Second Magic Start
+## 🚀 Five-minute local start
+
+*Once the one-time Fusion setup below is done, going from the downloaded
+binary to your first `SELECT` is three commands.*
 
 **Prerequisite:** Deploy the `RP_ARB.xdo` BI Publisher report to your Oracle Fusion tenant (catalog: [krokozyab/ofjdbc/otbireport](https://github.com/krokozyab/ofjdbc/tree/master/otbireport)) and make sure the account you'll authenticate as can run it. Three requirements in total, all inside Fusion — **[Fusion prerequisites](doc/fusion-prerequisites.md)** spells them out and shows how to verify all three with one command.
 
@@ -147,9 +148,9 @@ involving a client at all.
 
 You run the binary. You get an Oracle listener on `:1521` — except the tables behind it are Oracle Fusion's.
 
-Everything that speaks to an Oracle database just connects: SQLcl, DBeaver, SQL Developer, a real Oracle database's `dblink`, a Python script using python-oracledb, a JVM service on ojdbc — `sqlplus` too, if that is still what you reach for. Each query transparently becomes a BI Publisher SOAP call under the hood; rows stream back as the XML arrives.
+Everything that speaks to an Oracle database just connects: SQLcl, DBeaver, SQL Developer, a real Oracle database's `dblink`, a Python script using python-oracledb, a JVM service on ojdbc — `sqlplus` too, if that is still what you reach for. Each query becomes a BI Publisher SOAP call under the hood, and the rows come back in bounded pages: the proxy reads one report response, hands you those rows, and fetches the next page when you ask for it.
 
-**Your tools never find out it isn't a real database.**
+**Your tools connect as though it were a real database — that is the whole trick.**
 
 *Actively developed. Expect rough edges on exotic SQL shapes and unverified client/dialect combinations — `oratofusionproxy doctor --profiles` shows exactly what's covered today, and [Testing & verification](doc/testing.md) has the full matrix. Open an issue when you hit one.*
 
