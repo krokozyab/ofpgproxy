@@ -203,18 +203,40 @@ side. Microsoft's tools reach an Oracle database through **Oracle's own client**
 BI Desktop, the Power BI service's on-premises data gateway, Excel, SSAS, SSIS,
 SSRS, SSDT and BizTalk. Match its bitness to your Office / Power BI install.
 
-Then connect with the same three values every other client uses:
+Then connect with the same values every other client uses:
 
 | Field | Value |
 |---|---|
-| Server / Data source | `127.0.0.1:1521/fusion` — host and port from `--oracle-listen`; the service name is ignored |
-| Username | anything, e.g. `fusion` |
+| Server / Data source | `127.0.0.1/fusion` — host, port and service name; the port can be left out when it is the default `1521`, and the service name is ignored |
+| Authentication kind | **Basic** |
+| Username | anything — it is not validated |
 | Password | your `ORACLE_WIRE_PASSWORD` / `--oracle-password` value, **not** a Fusion password |
 
-- **Excel** — Data → Get Data → From Database → From Oracle Database.
-- **Power BI Desktop** — Home → Get Data → Oracle database.
+### Power BI Desktop
 
-Both then let you either pick tables from the list or paste a SQL statement.
+Home → Get Data → Oracle database. Choose **Import**, not DirectQuery (see
+below). The username really can be anything — `any` in this screenshot:
+
+<p align="center">
+  <img src="../assets/power-bi-connection.png"
+       alt="Power BI's Get Data dialog for an Oracle database: Server 127.0.0.1/fusion, Connectivity mode Import, Authentication kind Basic, Username any, and a filled password field"
+       width="820">
+</p>
+
+### Excel
+
+Data → Get Data → From Database → From Oracle Database. The same Server value,
+and **Advanced options** holds a SQL statement box — the easiest place to bound
+a query:
+
+<p align="center">
+  <img src="../assets/excel-oracle-connection.png"
+       alt="Excel with Fusion purchase-order rows loaded into a sheet, over the Oracle database dialog showing Server 127.0.0.1/fusion and the SQL statement select * from po_lines_all where rownum &lt; 10"
+       width="900">
+</p>
+
+Both tools then let you either pick tables from the list or paste a SQL
+statement.
 
 **Prefer Import over DirectQuery.** Every query is a BI Publisher report
 execution taking seconds, so a DirectQuery report that issues one query per
