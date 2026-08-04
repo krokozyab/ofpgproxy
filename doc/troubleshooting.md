@@ -146,7 +146,6 @@ Everything else (DDL, DML, PL/SQL blocks) is rejected. Writes come back as `ORA-
 
 If you think a query *should* be classifiable (a new client probe, a dictionary view we don't emulate yet), capture the SQL from `--log-queries` output and file it — these are cheap to add.
 
-> **Tip:** start the proxy with `--translate-http 127.0.0.1:8080` and paste the offending SQL into the playground at <http://127.0.0.1:8080>. It shows the router decision and the exact rewrite without touching Fusion — useful for narrowing down whether the issue is in routing, translation, or BIP itself. See [Configuration → SQL Translator playground](configuration.md#sql-translator-playground).
 
 ## Client-side surprises
 

@@ -34,7 +34,6 @@ Flags always win over environment variables. A few parameters are available only
 | `--listen` | `OFPG_LISTEN` | off | The **legacy PG-wire listener**. Unsupported since the Postgres frontend was dropped and off unless you ask for it — this is an Oracle-wire server. Listed here only because it appears in `--help`. |
 | `--log-level` | `OFPG_LOG_LEVEL` | `info` | `error` \| `warn` \| `info` \| `debug`. `info` reports what each client asks for; **`debug` adds every protocol step and is what a bug report wants**. |
 | `--log-queries` | — | `true` | One structured log entry per incoming query (kind, table, duration). Set `false` in production after tuning. |
-| `--translate-http` | — | off | `host:port` for the built-in offline SQL Translator playground (dev tool). Loopback only. See [SQL Translator playground](#sql-translator-playground). |
 
 ### Authentication
 
@@ -333,33 +332,6 @@ server. Progress prints per page; Ctrl-C stops after the current page and keeps
 everything already written, so re-running resumes rather than starting over.
 
 Writes are idempotent — running it twice does not duplicate rows.
-
-## SQL Translator playground
-
-A small built-in web page that shows, statement by statement, what the proxy *would* do with a given SQL — which router branch it lands in (catalog stub, foreign SELECT, cursor, session no-op, …) and the rewritten SQL that would go to BI Publisher or to the local DuckDB catalog. No connection to a Fusion tenant is required; translation is entirely offline.
-
-```bash
-./oratofusionproxy --oracle-listen 127.0.0.1:1521 --oracle-password changeme --translate-http 127.0.0.1:8080
-```
-
-Then open <http://127.0.0.1:8080> in a browser. `make run` enables it by default on `127.0.0.1:8080`; disable with `make run TRANSLATE_HTTP=`.
-
-The page also exposes a JSON endpoint suitable for scripting:
-
-```bash
-curl -sS http://127.0.0.1:8080/api/translate \
-  -H 'Content-Type: application/json' \
-  -d '{"sql":"SELECT * FROM gl_je_headers WHERE TRUE LIMIT 5"}'
-```
-
-Response shape: `{ "translated": "...", "kind": "foreign_select", "note": "Routed to Oracle BI Publisher (table: GL_JE_HEADERS).", "error": "" }`.
-
-**Safety notes — read before exposing this beyond `localhost`:**
-
-- The endpoint has **no authentication** and accepts arbitrary SQL strings. Bind only to loopback. If `--translate-http` resolves to a non-loopback address, the proxy logs a `WARNING` at startup.
-- Each request is capped at **64 KB** of body. Per-IP rate limit is **10 req/sec** (token bucket, same refill rate).
-- Translation is **purely textual** — the playground never opens a SOAP connection, never reads `metadata.db`, and never returns rows. It only shows the rewriting decision.
-- Every translate call emits one structured log line (`msg=translate kind=… in_bytes=… out_bytes=…`) so operators can see what people are sending; treat the page as a developer tool, not a public service.
 
 ## Signals
 

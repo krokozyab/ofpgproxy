@@ -41,8 +41,6 @@ so you can tell them apart from a real finding.
 - **The ops endpoints have no authentication.** `/metrics`, `/healthz` and
   `/readyz` are unauthenticated by design; bind them to loopback or scrape them
   behind something that adds auth. The binary warns if they leave loopback.
-- **The SQL translator playground** (`--translate-http`) accepts arbitrary SQL
-  and has no auth. It is off unless you turn it on, and it warns likewise.
 
 ## What the proxy does with your data
 
