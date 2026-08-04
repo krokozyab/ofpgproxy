@@ -45,7 +45,7 @@ Four more modes exist for unattended running — see
 
 **`FUSION_SQL_REPORT_PATH` is tenant-specific — check yours.**
 `/Custom/Financials/RP_ARB.xdo` is only the commonest place people upload the
-report to; `/Custom/CloudSQL/…` and per-team folders are just as normal. Use
+report to; a per-team or per-module folder of your own is just as normal. Use
 whatever path your own catalog upload produced. A wrong path fails every query,
 and it fails in a way that reads like a permissions problem — so this is the
 first thing to check, before suspecting roles.
