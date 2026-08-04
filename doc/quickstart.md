@@ -15,7 +15,7 @@ copy as `.env`.
 
 ## 1. Fill in `.env`
 
-Five lines are enough to start. Pick the auth mode you already have:
+Six lines are enough to start. Pick the auth mode you already have:
 
 **With a Fusion username and password** — nothing opens, nothing to click:
 
@@ -24,6 +24,7 @@ FUSION_HOST=fa-xxxx.oraclecloud.com
 FUSION_AUTH_TYPE=password
 FUSION_USER=your.fusion.user
 FUSION_PASSWORD=your-fusion-password
+FUSION_SQL_REPORT_PATH=/Custom/Financials/RP_ARB.xdo
 OFPG_ORACLE_LISTEN=127.0.0.1:1521
 ORACLE_WIRE_PASSWORD=changeme
 ```
@@ -34,12 +35,20 @@ Fusion login:
 ```
 FUSION_HOST=fa-xxxx.oraclecloud.com
 FUSION_AUTH_TYPE=sso
+FUSION_SQL_REPORT_PATH=/Custom/Financials/RP_ARB.xdo
 OFPG_ORACLE_LISTEN=127.0.0.1:1521
 ORACLE_WIRE_PASSWORD=changeme
 ```
 
 Four more modes exist for unattended running — see
 [Authentication](auth.md).
+
+**`FUSION_SQL_REPORT_PATH` is tenant-specific — check yours.**
+`/Custom/Financials/RP_ARB.xdo` is only the commonest place people upload the
+report to; `/Custom/CloudSQL/…` and per-team folders are just as normal. Use
+whatever path your own catalog upload produced. A wrong path fails every query,
+and it fails in a way that reads like a permissions problem — so this is the
+first thing to check, before suspecting roles.
 
 **Two different passwords live in that file, and mixing them up is the
 commonest first stumble.** `FUSION_PASSWORD` is your real Fusion account

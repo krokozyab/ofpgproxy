@@ -113,6 +113,8 @@ Oracle-wire listener.
 ```bash
 # Same env vars and --metadata-path you'd use to actually run the proxy
 # (see the Quick Start above) — doctor reads them exactly the same way.
+# --offline skips the tenant, so no report path is needed here; a real
+# doctor run checks FUSION_SQL_REPORT_PATH like everything else does.
 FUSION_HOST=fa-xxxx.oraclecloud.com FUSION_AUTH_TYPE=sso \
   ./oratofusionproxy doctor --offline
 ```

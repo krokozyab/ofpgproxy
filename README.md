@@ -91,8 +91,12 @@ binary to your first `SELECT` is three commands.*
 # 2. Point it at your Oracle Fusion tenant.
 #    --oracle-password is a value YOU choose here and now; it is not a Fusion
 #    password. Every Oracle client will log in with this exact string.
+#    --report-path is where YOUR tenant's copy of the report was uploaded;
+#    the built-in default is only the commonest choice, and a wrong path
+#    fails every query in a way that looks like a permissions problem.
 FUSION_HOST=fa-xxxx.oraclecloud.com FUSION_AUTH_TYPE=sso \
-  ./oratofusionproxy --oracle-listen 127.0.0.1:1521 --oracle-password changeme
+  ./oratofusionproxy --oracle-listen 127.0.0.1:1521 --oracle-password changeme \
+  --report-path /Custom/Financials/RP_ARB.xdo
 
 # 3. Connect with a real Oracle client — SQLcl here, one download, no
 #    Instant Client needed. user = FUSION, password = the --oracle-password

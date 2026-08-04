@@ -17,6 +17,10 @@ Client-side credentials (what you type into SQLcl, DBeaver or SQL Developer) are
 
 All actual authentication against Oracle happens on the Fusion side using whichever mode you configured.
 
+*The examples below show only the auth settings. Each one still needs
+`FUSION_SQL_REPORT_PATH` / `--report-path` pointing at your tenant's own copy of
+the report — see [Fusion prerequisites](fusion-prerequisites.md).*
+
 ---
 
 ## SSO
