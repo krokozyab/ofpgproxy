@@ -25,7 +25,7 @@
   <br />
 </div>
 
- <!--[![GitHub Downloads](https://img.shields.io/github/downloads/krokozyab/oracle-fusion-tns-proxy/total?style=for-the-badge&logo=github)](https://github.com/krokozyab/oracle-fusion-tns-proxy/releases)-->
+ [![GitHub Downloads](https://img.shields.io/github/downloads/krokozyab/oracle-fusion-tns-proxy/total?style=for-the-badge&logo=github)](https://github.com/krokozyab/oracle-fusion-tns-proxy/releases)
 Oracle Fusion Cloud's BI Publisher web service is the documented way to run ad-hoc SQL against a SaaS tenant. It speaks SOAP, returns base64-wrapped XML — and the Oracle clients you already own (SQLcl, DBeaver, a reconciliation script over `dblink`, an ojdbc-based service) expect the real Oracle wire protocol instead.
 
 **`oratofusionproxy` sits between them and makes them agree.**
